@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "OpenSource Together Documentation",
   "colors": {
     "primary": "#51a2ff",
     "light": "#8ec5ff",
@@ -50,10 +50,13 @@
           {
             "group": "Endpoint examples",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/endpoint/skeletons/get-skeleton",
+              "api-reference/endpoint/skeletons/create-skeleton",
+              "api-reference/endpoint/skeletons/delete-skeleton",
+              "api-reference/endpoint/skeletons/update-skeleton",
+              "api-reference/endpoint/users/users-me",
+              "api-reference/endpoint/users/user-get",
+              "api-reference/endpoint/users/user-update"
             ]
           }
         ]
@@ -87,7 +90,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:hi@opensource-together.com"
       }
     ],
     "primary": {

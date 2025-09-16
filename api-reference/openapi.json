@@ -1,216 +1,754 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
-  },
-  "servers": [
-    {
-      "url": "http://sandbox.mintlify.com"
-    }
-  ],
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
+  "openapi": "3.0.0",
   "paths": {
-    "/plants": {
+    "/skeletons": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "description": "Get all skeletons",
+        "operationId": "SkeletonController_findAll",
         "parameters": [
           {
-            "name": "limit",
+            "name": "page",
+            "required": false,
             "in": "query",
-            "description": "The maximum number of results to return",
             "schema": {
-              "type": "integer",
-              "format": "int32"
+              "type": "number"
+            }
+          },
+          {
+            "name": "size",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Paginated results",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SkeletonEntity"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "lastPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "currentPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "size": {
+                          "type": "number",
+                          "default": 10
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all skeletons",
+        "tags": ["Skeleton"]
+      },
+      "post": {
+        "description": "Create a new skeleton with the provided data",
+        "operationId": "SkeletonController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSkeletonDto"
+              },
+              "examples": {
+                "Complete example": {
+                  "value": {
+                    "name": "My Skeleton",
+                    "description": "Description of the skeleton"
+                  }
+                },
+                "Minimal example": {
+                  "value": {
+                    "name": "My Skeleton"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Skeleton created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SkeletonEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new skeleton",
+        "tags": ["Skeleton"]
+      }
+    },
+    "/skeletons/{id}": {
+      "get": {
+        "description": "Get a skeleton by id",
+        "operationId": "SkeletonController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the skeleton",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SkeletonEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skeleton not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a skeleton by id",
+        "tags": ["Skeleton"]
+      },
+      "patch": {
+        "description": "Update an existing skeleton with the provided data",
+        "operationId": "SkeletonController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the skeleton to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkeletonDto"
+              },
+              "examples": {
+                "Update name and description": {
+                  "value": {
+                    "name": "Updated Skeleton",
+                    "description": "Updated description"
+                  }
+                },
+                "Update name only": {
+                  "value": {
+                    "name": "New Name"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skeleton updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SkeletonEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Unexpected error",
+          "404": {
+            "description": "Skeleton not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
                 }
               }
             }
           }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
+        "summary": "Update a skeleton",
+        "tags": ["Skeleton"]
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/users/me": {
+      "get": {
+        "operationId": "UserController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["User"]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "description": "Get a user by id",
+        "operationId": "UserController_findOne",
         "parameters": [
           {
             "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
             "required": true,
+            "in": "path",
+            "description": "Public ID of the user",
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
+            "description": "User found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
                 }
               }
             }
           }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
+        },
+        "summary": "Get a user by id",
+        "tags": ["User"]
+      },
+      "patch": {
+        "description": "Update an existing user with the provided data",
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the user",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
-          "description": "Plant added to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/UpdateUserDto"
+              },
+              "examples": {
+                "Update name and bio": {
+                  "value": {
+                    "name": "Updated user",
+                    "bio": "This is an updated bio",
+                    "jobTitle": "Updated jobTitle"
+                  }
+                },
+                "Update name only": {
+                  "value": {
+                    "name": "New Name"
+                  }
+                },
+                "Update with social links": {
+                  "value": {
+                    "name": "John Doe",
+                    "bio": "Software developer",
+                    "jobTitle": "Senior Developer",
+                    "socialLinks": [
+                      {
+                        "type": "GITHUB",
+                        "url": "https://github.com/johndoe"
+                      },
+                      {
+                        "type": "TWITTER",
+                        "url": "https://twitter.com/johndoe"
+                      },
+                      {
+                        "type": "LINKEDIN",
+                        "url": "https://linkedin.com/in/johndoe"
+                      }
+                    ]
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+            "description": "User updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
           },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
               }
             }
           }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+        },
+        "summary": "Update a user",
+        "tags": ["User"]
+      }
+    }
+  },
+  "info": {
+    "title": "OST API",
+    "description": "OST API endpoints",
+    "version": "0.1",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "ost",
+      "description": ""
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Backend server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "SkeletonEntity": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
+          "id": {
+            "type": "string",
+            "pattern": "^ske_[0-9a-fA-F]{32}$",
+            "example": "ske_c54b633eb12f4900b92b34e222096449"
           },
-          "message": {
+          "name": {
             "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "myAttribute": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "name", "description", "myAttribute"]
+      },
+      "CreateSkeletonDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the skeleton",
+            "example": "My Skeleton"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description",
+            "example": "The description of the skeleton",
+            "nullable": true
+          },
+          "myAttribute": {
+            "type": "string",
+            "description": "A random attribute",
+            "example": "Any random attribute",
+            "nullable": true
+          }
+        },
+        "required": ["name"]
+      },
+      "UpdateSkeletonDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the skeleton",
+            "example": "My Skeleton"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description",
+            "example": "The description of the skeleton",
+            "nullable": true
+          },
+          "myAttribute": {
+            "type": "string",
+            "description": "A random attribute",
+            "example": "Any random attribute",
+            "nullable": true
           }
         }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      },
+      "SocialLinkDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of social link",
+            "enum": ["GITHUB", "TWITTER", "LINKEDIN", "DISCORD", "WEBSITE"],
+            "example": "GITHUB"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the social link (must match the domain of the type). Protocol is required, must use https://. Use empty string to delete the link.",
+            "example": "https://github.com/username"
+          }
+        },
+        "required": ["type", "url"]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "bio": {
+            "type": "string",
+            "description": "User bio",
+            "example": "Software developer passionate about technology"
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "User job title",
+            "example": "Senior Software Engineer"
+          },
+          "socialLinks": {
+            "description": "User social links",
+            "example": [
+              {
+                "type": "GITHUB",
+                "url": "https://github.com/username"
+              },
+              {
+                "type": "TWITTER",
+                "url": "https://twitter.com/username"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLinkDto"
+            }
+          }
+        }
       }
     }
   }
