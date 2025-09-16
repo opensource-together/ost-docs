@@ -1,0 +1,11 @@
+{
+  "name": "OST Documentation",
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        { "name": "Introduction", "path": "/intro" }
+      ]
+    }
+  ]
+}
