@@ -1,0 +1,105 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OST AI Engine API",
+    "description": "AI Engine endpoints",
+    "version": "0.1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "AI Engine server"
+    }
+  ],
+  "paths": {
+    "/recommendations": {
+      "get": {
+        "description": "Get project recommendations for a user",
+        "operationId": "RecommendationsController_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "User UUID to compute recommendations for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recommendations returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid user_id",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        },
+        "summary": "Get recommendations",
+        "tags": ["AI Engine"]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RecommendationItem": {
+        "type": "object",
+        "properties": {
+          "project_id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "similarity_score": { "type": "number" },
+          "semantic_similarity": { "type": "number" },
+          "category_similarity": { "type": "number" },
+          "tech_similarity": { "type": "number" },
+          "popularity_score": { "type": "number" },
+          "stargazers_count": { "type": "number" },
+          "primary_language": { "type": "string" },
+          "categories": { "type": "array", "items": { "type": "string" } },
+          "tech_stacks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["project_id", "title", "similarity_score"]
+      },
+      "RecommendationsResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string" },
+          "username": { "type": "string" },
+          "recommendations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecommendationItem" }
+          },
+          "total_count": { "type": "number" },
+          "generated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": ["user_id", "recommendations", "total_count"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

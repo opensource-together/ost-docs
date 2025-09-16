@@ -48,15 +48,21 @@
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Nest.js API examples",
             "pages": [
-              "api-reference/endpoint/skeletons/get-skeleton",
-              "api-reference/endpoint/skeletons/create-skeleton",
-              "api-reference/endpoint/skeletons/delete-skeleton",
-              "api-reference/endpoint/skeletons/update-skeleton",
-              "api-reference/endpoint/users/users-me",
-              "api-reference/endpoint/users/user-get",
-              "api-reference/endpoint/users/user-update"
+              "api-reference/endpoint/nest/skeletons/get-skeleton",
+              "api-reference/endpoint/nest/skeletons/create-skeleton",
+              "api-reference/endpoint/nest/skeletons/delete-skeleton",
+              "api-reference/endpoint/nest/skeletons/update-skeleton",
+              "api-reference/endpoint/nest/users/users-me",
+              "api-reference/endpoint/nest/users/user-get",
+              "api-reference/endpoint/nest/users/user-update"
+            ]
+          },
+          {
+            "group": "AI Engine API examples",
+            "pages": [
+              "api-reference/endpoint/ai-engine/recommendations/get-recommendations"
             ]
           }
         ]
