@@ -1,80 +1,260 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Platform Quickstart"
+description: "Get the complete OpenSource Together platform running in minutes"
 ---
 
-## Get started in three steps
+## Welcome to OpenSource Together! 🚀
 
-Get your documentation site running locally and make your first customization.
+This quickstart guide will help you get the entire OpenSource Together platform running locally in just a few steps. Our platform consists of four main components working together to provide a comprehensive open-source project discovery and collaboration experience.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+## What You'll Build
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Frontend" icon="monitor">
+    Next.js application with intelligent project discovery and user dashboard
+  </Card>
+  <Card title="Backend" icon="server">
+    NestJS API with user management and project operations
+  </Card>
+  <Card title="AI Engine" icon="brain">
+    ML-powered recommendation system with real-time API
+  </Card>
+  <Card title="Documentation" icon="book-open">
+    Comprehensive documentation built with Mintlify
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18.17 or later [Download Node.js](https://nodejs.org/)
+  </Card>
+  <Card title="pnpm" icon="package">
+    Fast package manager ```bash npm install -g pnpm ```
+  </Card>
+  <Card title="Docker" icon="docker">
+    For PostgreSQL and Redis [Download Docker](https://docker.com/)
+  </Card>
+  <Card title="Python" icon="python">
+    Version 3.13+ for AI Engine [Download Python](https://python.org/)
+  </Card>
+</CardGroup>
+
+## Step 1: Clone and Install
+
+### 1.1 Clone the Repository
+
+```bash
+git clone https://github.com/opensource-together/opensource-together.git
+cd opensource-together
+```
+
+### 1.2 Install Dependencies
+
+<AccordionGroup>
+  <Accordion title="Root Dependencies">
+    ```bash # Install root dependencies pnpm install ```
+  </Accordion>
+  <Accordion title="Frontend Dependencies">
+    ```bash cd apps/ost-frontend pnpm install ```
+  </Accordion>
+  <Accordion title="Backend Dependencies">
+    ```bash cd apps/ost-backend npm install ```
+  </Accordion>
+  <Accordion title="AI Engine Dependencies">
+    ```bash cd apps/ost-ai-engine pip install uv uv sync --group dev ```
+  </Accordion>
+</AccordionGroup>
+
+## Step 2: Environment Configuration
+
+### 2.1 Frontend Environment
+
+```bash
+cd apps/ost-frontend
+cp .env.example .env.local
+```
+
+Configure these variables in `.env.local`:
+
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+```
+
+### 2.2 Backend Environment
+
+```bash
+cd apps/ost-backend
+cp .env.example .env
+```
+
+Configure these variables in `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/ost_backend"
+JWT_SECRET="your-super-secret-jwt-key"
+GITHUB_CLIENT_ID="your_github_client_id"
+GITHUB_CLIENT_SECRET="your_github_client_secret"
+PORT=3001
+```
+
+### 2.3 AI Engine Environment
+
+```bash
+cd apps/ost-ai-engine
+cp .env.example .env
+```
+
+Configure these variables in `.env`:
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5434/OST_PROD
+REDIS_CACHE_URL=redis://localhost:6379/0
+GITHUB_ACCESS_TOKEN=your_github_token
+MLFLOW_TRACKING_URI=sqlite:///logs/mlflow.db
+GO_API_PORT=8080
+```
+
+## Step 3: Start Services
+
+### 3.1 Database Services
+
+<AccordionGroup>
+  <Accordion title="Start Backend Database">
+    ```bash cd apps/ost-backend docker compose up -d ```
+  </Accordion>
+  <Accordion title="Start AI Engine Database">
+    ```bash cd apps/ost-ai-engine docker-compose up -d db redis ```
+  </Accordion>
+</AccordionGroup>
+
+### 3.2 Database Setup
+
+<AccordionGroup>
+  <Accordion title="Backend Database Setup">
+    ```bash cd apps/ost-backend npx prisma generate npx prisma migrate dev npx
+    prisma db seed ```
+  </Accordion>
+  <Accordion title="AI Engine Database Setup">
+    ```bash cd apps/ost-ai-engine psql -d OST_PROD -f
+    scripts/database/recreate_schema.sql uv run python
+    scripts/database/create_test_users.py ```
+  </Accordion>
+</AccordionGroup>
+
+## Step 4: Start Applications
+
+You'll need multiple terminal windows for this step:
+
+<AccordionGroup>
+  <Accordion title="Terminal 1: Frontend">
+    ```bash cd apps/ost-frontend pnpm dev ``` Available at:
+    http://localhost:3000
+  </Accordion>
+  <Accordion title="Terminal 2: Backend">
+    ```bash cd apps/ost-backend npm run start:dev ``` Available at:
+    http://localhost:3001
+  </Accordion>
+  <Accordion title="Terminal 3: AI Engine Pipeline">
+    ```bash cd apps/ost-ai-engine uv run dagster dev ``` Dagster UI at:
+    http://localhost:3000 (if not occupied)
+  </Accordion>
+  <Accordion title="Terminal 4: AI Engine API">
+    ```bash cd apps/ost-ai-engine/src/api/go go build -o recommendations-api
+    recommendations.go ./recommendations-api ``` API available at:
+    http://localhost:8080
+  </Accordion>
+</AccordionGroup>
+
+## Step 5: Verify Installation
+
+<AccordionGroup>
+  <Accordion title="Frontend Check">
+    Open http://localhost:3000 and verify the OpenSource Together dashboard loads.
+  </Accordion>
+  <Accordion title="Backend Check">
+    ```bash
+    curl http://localhost:3001/health
+    ```
+    Should return: `{"status":"ok","timestamp":"..."}`
+  </Accordion>
+  <Accordion title="AI Engine Check">
+    ```bash
+    curl http://localhost:8080/health
+    ```
+    Should return: `{"status":"healthy","timestamp":"..."}`
+  </Accordion>
+</AccordionGroup>
+
+<Success>
+  **Congratulations!** 🎉 You now have the complete OpenSource Together platform
+  running locally.
+</Success>
+
+## Next Steps
+
+Now that you have everything running, explore these resources:
+
+<CardGroup cols={2}>
+  <Card title="Frontend Development" icon="monitor" href="/frontend/quickstart">
+    Learn about the Next.js frontend architecture
+  </Card>
+  <Card title="Backend Development" icon="server" href="/backend/quickstart">
+    Understand the NestJS backend API
+  </Card>
+  <Card title="AI Engine Development" icon="brain" href="/ai/quickstart">
+    Explore the ML pipeline and recommendations
+  </Card>
+  <Card title="Complete Development Guide" icon="tools" href="/development">
+    Comprehensive development workflow
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port Conflicts">
+    If you encounter port conflicts: - Frontend: `pnpm dev -- -p 3001` -
+    Backend: Change `PORT=3002` in `.env` - AI Engine API: Change
+    `GO_API_PORT=8081` in `.env`
+  </Accordion>
+  <Accordion title="Database Connection Issues">
+    Ensure Docker is running: ```bash docker ps docker compose down && docker
+    compose up -d ```
+  </Accordion>
+  <Accordion title="Environment Variables">
+    Make sure all `.env` files are properly configured and restart the services.
+  </Accordion>
+</AccordionGroup>
+
+## Need Help?
+
+<CardGroup cols={3}>
+  <Card
+    title="GitHub Issues"
+    icon="github"
+    href="https://github.com/opensource-together/opensource-together/issues"
+  >
+    Report bugs or ask questions
+  </Card>
+  <Card
+    title="Discord Community"
+    icon="discord"
+    href="https://discord.gg/opensource-together"
+  >
+    Real-time community support
+  </Card>
+  <Card
+    title="Contributing Guide"
+    icon="code-branch"
+    href="/contributing/index"
+  >
+    Learn how to contribute to the project
+  </Card>
+</CardGroup>

@@ -1,0 +1,107 @@
+---
+title: "Frontend Overview"
+description: "Learn about the OpenSource Together frontend architecture and key features"
+---
+
+<img
+  className="block rounded-2xl"
+  src="https://framerusercontent.com/images/QaRCLVR5JNu21BNTfBJIS7X5k0.png?width=3228&height=1764"
+  alt="Frontend Overview"
+/>
+
+## Introduction
+
+The OpenSource Together frontend is a modern, scalable Next.js application built with a feature-based architecture. It provides a comprehensive dashboard for discovering and growing open-source projects with your community.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Project Discovery" icon="search" href="/frontend/projects">
+    Advanced search and filtering to find relevant open-source projects
+  </Card>
+  <Card title="Community Dashboard" icon="users" href="/frontend/dashboard">
+    Track project activity, contributions, and community engagement
+  </Card>
+  <Card
+    title="Project Management"
+    icon="folder-plus"
+    href="/frontend/projects/create"
+  >
+    Create and manage projects from GitHub or from scratch
+  </Card>
+  <Card title="Secure Authentication" icon="shield-check" href="/frontend/auth">
+    OAuth integration with GitHub and secure user management
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+<AccordionGroup>
+  <Accordion title="Framework & Runtime">
+    - **Next.js 15** - React framework with App Router - **React 18** - Modern
+    React with concurrent features - **TypeScript** - Type-safe development
+  </Accordion>
+  <Accordion title="State Management">
+    - **TanStack Query** - Server state management and caching - **Zustand** -
+    Client state management - **React Hook Form** - Form state and validation
+  </Accordion>
+  <Accordion title="UI & Styling">
+    - **Tailwind CSS** - Utility-first CSS framework - **Radix UI** - Accessible
+    component primitives - **Heroicons** - Beautiful icons
+  </Accordion>
+  <Accordion title="Development Tools">
+    - **ESLint & Prettier** - Code quality and formatting - **pnpm** - Fast,
+    disk space efficient package manager
+  </Accordion>
+</AccordionGroup>
+
+## Architecture Principles
+
+The frontend follows a **feature-based architecture** with clear separation of concerns:
+
+<Info>
+  **Core Principle**: Each feature is an autonomous module with its own
+  components, hooks, services, and state management.
+</Info>
+
+### Key Architectural Decisions
+
+1. **Feature-Based Organization**: Business logic is organized by features rather than technical layers
+2. **Hybrid State Management**: Server state (TanStack Query) and client state (Zustand) are clearly separated
+3. **Type Safety**: Full TypeScript coverage with Zod runtime validation
+4. **Performance Optimization**: Intelligent caching, code splitting, and optimized re-renders
+
+## Getting Started
+
+Ready to start developing? Follow our [Quick Start Guide](/frontend/quickstart) to set up your development environment.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/frontend/quickstart">
+    Get up and running in minutes
+  </Card>
+  <Card title="Architecture Guide" icon="sitemap" href="/frontend/architecture">
+    Deep dive into the frontend architecture
+  </Card>
+</CardGroup>
+
+## Community & Support
+
+<CardGroup cols={3}>
+  <Card
+    title="GitHub Issues"
+    icon="github"
+    href="https://github.com/opensource-together/opensource-together/issues"
+  >
+    Report bugs and request features
+  </Card>
+  <Card
+    title="Discussions"
+    icon="comments"
+    href="https://github.com/opensource-together/opensource-together/discussions"
+  >
+    Community discussions and Q&A
+  </Card>
+  <Card title="𝕏" icon="x-twitter" href="https://x.com/OpenSTogether">
+    Real-time community chat
+  </Card>
+</CardGroup>

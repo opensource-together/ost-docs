@@ -1,0 +1,194 @@
+---
+title: "Frontend Quick Start"
+description: "Get up and running with the OpenSource Together frontend in minutes"
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18.17 or later. <a href="https://nodejs.org/">Download Node.js</a>
+  </Card>
+  <Card title="pnpm" icon="package">
+    Fast, disk space efficient package manager – install with{" "}
+    <code>npm install -g pnpm</code>.
+  </Card>
+</CardGroup>
+
+## Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/opensource-together/opensource-together.git
+cd opensource-together
+```
+
+### 2. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Environment Setup
+
+Copy the environment file and configure your variables:
+
+```bash
+cp .env.example .env
+```
+
+```bash
+# Next.js configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+### 4. Start Development Server
+
+```bash
+pnpm dev
+```
+
+Your application will be available at <a href="http://localhost:3000">[http://localhost:3000](http://localhost:3000)</a>.
+
+<Success>
+  <strong>Success!</strong> You should see the OpenSource Together dashboard
+  running locally.
+</Success>
+
+## Project Structure
+
+After installation, your project structure should look like this:
+
+```txt
+opensource-together/
+├── src/
+│   ├── app/              # Next.js App Router
+│   ├── features/         # Feature-based modules
+│   ├── shared/           # Reusable components and utilities
+│   ├── config/           # Global configuration
+│   └── types/            # Global TypeScript types
+├── public/               # Static assets
+├── components.json       # shadcn/ui configuration
+└── package.json          # Dependencies and scripts
+```
+
+## Available Scripts
+
+<AccordionGroup>
+  <Accordion title="Development">
+    <CodeBlock language="bash">
+{`pnpm dev        # Start development server
+pnpm build      # Build for production
+pnpm start      # Start production server
+pnpm lint       # Run ESLint
+pnpm type-check # Run TypeScript checks
+`}
+    </CodeBlock>
+  </Accordion>
+
+  <Accordion title="Code Quality">
+    <CodeBlock language="bash">
+{`pnpm format         # Format code with Prettier
+pnpm test           # Run tests
+pnpm test:watch     # Run tests in watch mode
+pnpm test:coverage  # Run tests with coverage
+`}
+    </CodeBlock>
+  </Accordion>
+</AccordionGroup>
+
+## First Steps
+
+### 1. Explore the Features
+
+Navigate through the application to understand the current features:
+
+- **Dashboard**: Overview of projects and activity
+- **Projects**: Browse and search open-source projects
+- **Authentication**: GitHub OAuth integration
+- **Profile**: User settings and preferences
+
+### 2. Check the Developer Tools
+
+<CardGroup cols={2}>
+  <Card title="TanStack Query DevTools" icon="database">
+    Available in development mode to monitor API calls and caching
+  </Card>
+  <Card title="React DevTools" icon="react">
+    Browser extension for debugging React components
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Port Already in Use">
+    If port 3000 is already in use:
+    <CodeBlock language="bash">
+{`pnpm dev -- -p 3001`}
+    </CodeBlock>
+  </Accordion>
+
+<Accordion title="Environment Variables Not Loading">
+  Ensure your <code>.env</code> file is in the app directory and restart the
+  development server.
+</Accordion>
+
+  <Accordion title="TypeScript Errors">
+    Run type checking to identify issues:
+    <CodeBlock language="bash">
+{`pnpm type-check`}
+    </CodeBlock>
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you have the frontend running, you can:
+
+<CardGroup cols={2}>
+  <Card title="Learn Architecture" icon="sitemap" href="/frontend/architecture">
+    Understand the feature-based architecture
+  </Card>
+  <Card
+    title="Explore Components"
+    icon="puzzle-piece"
+    href="/frontend/components"
+  >
+    Learn about our UI component library
+  </Card>
+  <Card title="API Integration" icon="plug" href="/frontend/api">
+    Connect to backend services
+  </Card>
+  <Card title="Contributing" icon="code-branch" href="/contributing">
+    Learn how to contribute to the project
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<CardGroup cols={3}>
+  <Card
+    title="GitHub Issues"
+    icon="github"
+    href="https://github.com/opensource-together/opensource-together/issues"
+  >
+    Report bugs or request features
+  </Card>
+  <Card
+    title="Discussions"
+    icon="comments"
+    href="https://github.com/opensource-together/opensource-together/discussions"
+  >
+    Community Q&amp;A and discussions
+  </Card>
+  <Card title="𝕏" icon="x-twitter" href="https://x.com/OpenSTogether">
+    Real-time community support
+  </Card>
+</CardGroup>

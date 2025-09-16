@@ -8,15 +8,100 @@
     "dark": "#000000"
   },
   "favicon": "/favicon.ico",
+  "logo": {
+    "light": "/logo/ostogether-logo.svg",
+    "dark": "/logo/ostogether-logo-dark.svg"
+  },
+
   "navigation": {
     "tabs": [
       {
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Introduction",
             "pages": ["index", "quickstart", "development"]
           },
+          {
+            "group": "Contributing",
+            "pages": ["contributing/contributing", "contributing/deployment"]
+          }
+        ]
+      },
+
+      {
+        "tab": "Frontend",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["frontend/overview", "frontend/architecture"]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": ["frontend/quickstart", "frontend/faq"]
+          }
+        ]
+      },
+
+      {
+        "tab": "Backend",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["backend/overview"]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": ["backend/quickstart", "backend/faq"]
+          }
+        ]
+      },
+
+      {
+        "tab": "AI Engine",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["ai/overview"]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": ["ai/quickstart", "ai/faq"]
+          }
+        ]
+      },
+
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Documentation",
+            "pages": ["api-reference/introduction"]
+          },
+          {
+            "group": "Nest.js API Examples",
+            "pages": [
+              "api-reference/endpoint/nest/skeletons/get-skeleton",
+              "api-reference/endpoint/nest/skeletons/create-skeleton",
+              "api-reference/endpoint/nest/skeletons/delete-skeleton",
+              "api-reference/endpoint/nest/skeletons/update-skeleton",
+              "api-reference/endpoint/nest/users/users-me",
+              "api-reference/endpoint/nest/users/user-get",
+              "api-reference/endpoint/nest/users/user-update"
+            ]
+          },
+          {
+            "group": "AI Engine API Examples",
+            "pages": [
+              "api-reference/endpoint/ai-engine/recommendations/get-recommendations"
+            ]
+          }
+        ]
+      },
+
+      {
+        "tab": "Resources",
+        "groups": [
           {
             "group": "Customization",
             "pages": ["essentials/settings", "essentials/navigation"]
@@ -31,7 +116,7 @@
             ]
           },
           {
-            "group": "AI tools",
+            "group": "AI Tools",
             "pages": [
               "ai-tools/cursor",
               "ai-tools/claude-code",
@@ -39,35 +124,9 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": ["api-reference/introduction"]
-          },
-          {
-            "group": "Nest.js API examples",
-            "pages": [
-              "api-reference/endpoint/nest/skeletons/get-skeleton",
-              "api-reference/endpoint/nest/skeletons/create-skeleton",
-              "api-reference/endpoint/nest/skeletons/delete-skeleton",
-              "api-reference/endpoint/nest/skeletons/update-skeleton",
-              "api-reference/endpoint/nest/users/users-me",
-              "api-reference/endpoint/nest/users/user-get",
-              "api-reference/endpoint/nest/users/user-update"
-            ]
-          },
-          {
-            "group": "AI Engine API examples",
-            "pages": [
-              "api-reference/endpoint/ai-engine/recommendations/get-recommendations"
-            ]
-          }
-        ]
       }
     ],
+
     "global": {
       "anchors": [
         {
@@ -88,10 +147,7 @@
       ]
     }
   },
-  "logo": {
-    "light": "/logo/ostogether-logo.svg",
-    "dark": "/logo/ostogether-logo-dark.svg"
-  },
+
   "navbar": {
     "links": [
       {
@@ -105,6 +161,7 @@
       "href": "https://dashboard.mintlify.com"
     }
   },
+
   "contextual": {
     "options": [
       "copy",
@@ -117,6 +174,7 @@
       "vscode"
     ]
   },
+
   "footer": {
     "socials": {
       "x": "https://x.com/OpenSTogether",

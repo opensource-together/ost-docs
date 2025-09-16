@@ -1,97 +1,204 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "OST Documentation"
+description: "Comprehensive documentation for the OpenSource Together platform - discover, grow, and contribute to open-source projects"
 ---
 
-## Setting up
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Hero Dark"
+/>
 
-Get your documentation site up and running in minutes.
+## Welcome to OpenSource Together!
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+OpenSource Together is a comprehensive platform that helps you discover, grow, and contribute to open-source projects with your community. Our platform combines intelligent recommendations, community features, and powerful tools to make open-source collaboration more accessible and engaging.
 
-## Make it yours
+## Platform Overview
 
-Design a docs site that looks great and empowers your users.
+Our platform consists of four main components working together to provide a seamless experience:
 
-<Columns cols={2}>
+<CardGroup cols={2}>
+  <Card title="Frontend" icon="palette" href="/frontend/overview">
+    Modern Next.js application with feature-based architecture, providing an
+    intuitive user interface for discovering and managing open-source projects.
+  </Card>
+  <Card title="Backend" icon="server" href="/backend/overview">
+    Robust NestJS API with PostgreSQL and Prisma, handling authentication, data
+    management, and business logic.
+  </Card>
+  <Card title="AI Engine" icon="brain" href="/ai/overview">
+    Intelligent recommendation system powered by machine learning, providing
+    personalized project suggestions and insights.
+  </Card>
+  <Card title="Documentation" icon="book-open" href="/docs">
+    Comprehensive documentation built with Mintlify, providing guides, API
+    references, and best practices.
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+Get up and running with OpenSource Together in minutes:
+
+<CardGroup cols={2}>
+  <Card title="Frontend Setup" icon="monitor" href="/frontend/quickstart">
+    Set up the Next.js frontend application
+  </Card>
+  <Card title="Backend Setup" icon="server" href="/backend/quickstart">
+    Configure the NestJS backend with database
+  </Card>
+  <Card title="AI Engine Setup" icon="brain" href="/ai/quickstart">
+    Set up the ML pipeline and recommendation API
+  </Card>
+  <Card title="Full Platform Setup" icon="rocket" href="/quickstart">
+    Complete platform setup guide
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion title="Intelligent Recommendations">
+    Our AI-powered recommendation system analyzes your interests, activity
+    patterns, and project preferences to suggest the most relevant open-source
+    projects for you to explore and contribute to.
+  </Accordion>
+  <Accordion title="Community Dashboard">
+    Track your open-source journey with comprehensive analytics, contribution
+    history, and community engagement metrics. See your impact and growth over
+    time.
+  </Accordion>
+  <Accordion title="Project Management">
+    Create and manage projects from GitHub or start from scratch. Organize your
+    repositories, track issues, and coordinate with your community.
+  </Accordion>
+  <Accordion title="Secure Authentication">
+    Seamless GitHub OAuth integration with secure JWT-based authentication. Your
+    data is protected with industry-standard security practices.
+  </Accordion>
+</AccordionGroup>
+
+## Technology Stack
+
+<CardGroup cols={2}>
+  <Card title="Frontend" icon="react">
+    - Next.js 15 with App Router - TypeScript for type safety - Tailwind CSS for
+    styling - TanStack Query + Zustand for state management
+  </Card>
+  <Card title="Backend" icon="node-js">
+    - NestJS framework - PostgreSQL with Prisma ORM - JWT authentication - Redis
+    for caching
+  </Card>
+  <Card title="AI Engine" icon="python">
+    - Python 3.13+ for ML processing - Go 1.24+ for high-performance API - dbt
+    for data transformation - MLflow for model tracking
+  </Card>
+  <Card title="Infrastructure" icon="cloud">
+    - Docker containerization - GitHub Actions CI/CD - PostgreSQL with vector
+    extensions - Redis caching layer
+  </Card>
+</CardGroup>
+
+## Getting Started as a Developer
+
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Contributing Guide"
+    icon="code-branch"
+    href="/contributing/index"
   >
-    Edit your docs locally and preview them in real time.
+    Learn how to contribute to the OpenSource Together platform
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Architecture Overview"
+    icon="sitemap"
+    href="/frontend/architecture"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Understand the platform architecture and design principles
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
+    title="API Documentation"
+    icon="book-open"
     href="/api-reference/introduction"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Explore our comprehensive API documentation
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+  <Card title="Development Setup" icon="tools" href="/development">
+    Set up your development environment
   </Card>
+</CardGroup>
+
+## Community & Support
+
+Join our growing community of open-source enthusiasts:
+
+<CardGroup cols={3}>
   <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
+    title="GitHub"
+    icon="github"
+    href="https://github.com/opensource-together/opensource-together"
   >
-    Add sample code to demonstrate how to use your product.
+    Contribute to the project and report issues
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Discord"
+    icon="discord"
+    href="https://discord.gg/opensource-together"
   >
-    Display images and other media.
+    Join our community chat for real-time support
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="Discussions"
+    icon="comments"
+    href="https://github.com/opensource-together/opensource-together/discussions"
   >
-    Write once and reuse across your docs.
+    Ask questions and share ideas with the community
   </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## Documentation Sections
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<AccordionGroup>
+  <Accordion title="Frontend Documentation">
+    - [Overview](/frontend/overview) - Frontend architecture and features -
+    [Architecture](/frontend/architecture) - Detailed architectural guide -
+    [Quick Start](/frontend/quickstart) - Get started with frontend development
+    - [FAQ](/frontend/faq) - Frequently asked questions
+  </Accordion>
+  <Accordion title="Backend Documentation">
+    - [Overview](/backend/overview) - Backend architecture and API - [Quick
+    Start](/backend/quickstart) - Set up the backend services -
+    [FAQ](/backend/faq) - Common backend questions
+  </Accordion>
+  <Accordion title="AI Engine Documentation">
+    - [Overview](/ai/overview) - ML pipeline and recommendation system - [Quick
+    Start](/ai/quickstart) - Configure the AI engine - [FAQ](/ai/faq) - AI
+    engine troubleshooting
+  </Accordion>
+  <Accordion title="API Reference">
+    - [Introduction](/api-reference/introduction) - API overview and
+    authentication - [Nest.js Endpoints](/api-reference/endpoint/nest) - Backend
+    API documentation - [AI Engine Endpoints](/api-reference/endpoint/ai-engine)
+    - Recommendation API
+  </Accordion>
+</AccordionGroup>
+
+## Ready to Get Started?
+
+<CardGroup cols={2}>
+  <Card title="Start Contributing" icon="rocket" href="/contributing/index">
+    Join our community and start contributing to open-source
+  </Card>
+  <Card
+    title="Explore the Platform"
+    icon="compass"
+    href="https://opensource-together.com"
+  >
+    Visit the live platform to see it in action
+  </Card>
+</CardGroup>

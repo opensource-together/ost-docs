@@ -1,0 +1,249 @@
+---
+title: "Frontend Architecture"
+description: "Deep dive into the OpenSource Together frontend architecture and design patterns"
+---
+
+## Architecture Overview
+
+The OpenSource Together frontend follows a **feature-based architecture** that prioritizes modularity, maintainability, and scalability. This approach organizes code by business features rather than technical layers.
+
+<Warning>
+  **Critical**: All developers must follow the architectural principles outlined
+  in this guide. Violations will cause maintenance issues and performance
+  degradation.
+</Warning>
+
+## Core Architecture Principles
+
+### 1. Feature-Based Organization
+
+Each feature is an autonomous module under `src/features/` containing all related code:
+
+```
+src/features/
+├── auth/
+│   ├── components/     # Auth-specific UI components
+│   ├── views/         # Auth pages and views
+│   ├── forms/         # Login/register forms
+│   ├── hooks/         # Auth business logic
+│   ├── services/      # Auth API calls
+│   ├── stores/        # Auth client state
+│   ├── validations/   # Auth schemas (Zod)
+│   └── types/         # Auth TypeScript types
+├── projects/
+│   ├── components/    # Project UI components
+│   ├── views/         # Project pages
+│   ├── forms/         # Project forms
+│   ├── hooks/         # Project business logic
+│   ├── services/      # Project API calls
+│   ├── stores/        # Project client state
+│   ├── validations/   # Project schemas
+│   └── types/         # Project types
+└── dashboard/
+    └── ...           # Dashboard feature structure
+```
+
+### 2. Hybrid State Management
+
+<AccordionGroup>
+  <Accordion title="Server State (TanStack Query)">
+    - API data fetching and caching - Background synchronization - Optimistic
+    updates - Error handling and retries
+  </Accordion>
+  <Accordion title="Client State (Zustand)">
+    - UI state (modals, forms, filters) - User preferences - Local application
+    state - Navigation state
+  </Accordion>
+</AccordionGroup>
+
+<Info>
+  **Rule**: Never duplicate data between server and client state. Use events or
+  optimistic updates for synchronization.
+</Info>
+
+### 3. Clear Separation of Concerns
+
+<CardGroup cols={2}>
+  <Card title="Views" icon="eye">
+    - UI composition and orchestration - Page-level components - Route handlers
+  </Card>
+  <Card title="Hooks" icon="hook">
+    - Business logic - State management - Side effects
+  </Card>
+  <Card title="Services" icon="server">
+    - API communication - External integrations - Data transformation
+  </Card>
+  <Card title="Components" icon="puzzle-piece">
+    - Stateless UI pieces - Reusable components - Pure presentation
+  </Card>
+</CardGroup>
+
+## File Naming Conventions
+
+All files follow strict naming conventions with precise suffixes:
+
+| Suffix           | Purpose                    | Example                     |
+| ---------------- | -------------------------- | --------------------------- |
+| `.component.tsx` | UI components              | `ProjectCard.component.tsx` |
+| `.view.tsx`      | Main pages/views           | `ProjectsList.view.tsx`     |
+| `.form.tsx`      | React Hook Form components | `CreateProject.form.tsx`    |
+| `.hook.ts`       | Business logic hooks       | `useProjects.hook.ts`       |
+| `.service.ts`    | API calls/services         | `projects.service.ts`       |
+| `.store.ts`      | Zustand stores             | `projects.store.ts`         |
+| `.schema.ts`     | Zod schemas                | `project.schema.ts`         |
+| `.type.ts`       | TypeScript types           | `project.type.ts`           |
+| `.config.ts`     | Configuration              | `query.config.ts`           |
+
+## Directory Structure
+
+```
+src/
+├── app/                    # Next.js routing only
+│   ├── (auth)/            # Auth route group
+│   ├── dashboard/         # Dashboard routes
+│   ├── projects/          # Project routes
+│   └── api/               # API routes
+├── features/              # Feature modules
+│   └── [feature-name]/
+│       ├── components/    # Feature UI components
+│       ├── views/         # Feature pages
+│       ├── forms/         # Feature forms
+│       ├── hooks/         # Feature business logic
+│       ├── services/      # Feature API calls
+│       ├── stores/        # Feature client state
+│       ├── validations/   # Feature Zod schemas
+│       └── types/         # Feature TypeScript types
+├── shared/                # Reusable code
+│   ├── components/        # Shared UI components
+│   ├── hooks/             # Shared hooks
+│   ├── lib/               # Utility functions
+│   ├── stores/            # Global stores
+│   └── types/             # Generic types
+├── config/                # Global configuration
+├── types/                 # Global app-level types
+└── middleware.ts          # Next.js middleware
+```
+
+## State Management Patterns
+
+### TanStack Query Configuration
+
+```typescript
+// config/query.config.ts
+export const queryConfig = {
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+  },
+};
+```
+
+### Zustand Store Pattern
+
+```typescript
+// features/projects/stores/projects.store.ts
+interface ProjectsState {
+  filters: ProjectFilters;
+  selectedProject: Project | null;
+  setFilters: (filters: ProjectFilters) => void;
+  setSelectedProject: (project: Project | null) => void;
+}
+
+export const useProjectsStore = create<ProjectsState>((set) => ({
+  filters: defaultFilters,
+  selectedProject: null,
+  setFilters: (filters) => set({ filters }),
+  setSelectedProject: (project) => set({ selectedProject: project }),
+}));
+```
+
+## Import Organization
+
+Imports are automatically organized by Prettier with this order:
+
+```json
+{
+  "importOrder": [
+    "<THIRD_PARTY_MODULES>",
+    "^@/config/(.*)$",
+    "^@/types/(.*)$",
+    "^@/shared/(.*)$",
+    "^@/features/(.*)$",
+    "^@/app/(.*)$",
+    "^[./]"
+  ]
+}
+```
+
+## Best Practices
+
+### ✅ Do's
+
+- Organize code by business features
+- Use TypeScript for all code
+- Validate API data with Zod schemas
+- Keep components stateless and pure
+- Use business logic hooks for state access
+- Implement proper error boundaries
+- Write unit tests for business logic
+
+### ❌ Don'ts
+
+- Put business logic in UI components
+- Mix server and client state
+- Duplicate data between stores
+- Create circular dependencies between features
+- Skip type definitions
+- Ignore error handling
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="Code Splitting">
+    - Automatic route-based splitting with Next.js - Dynamic imports for heavy
+    components - Lazy loading for non-critical features
+  </Accordion>
+  <Accordion title="Caching Strategy">
+    - Intelligent TanStack Query caching - Optimistic updates for better UX -
+    Background refetching for fresh data
+  </Accordion>
+  <Accordion title="Bundle Optimization">
+    - Tree shaking for unused code - Image optimization with Next.js - Font
+    optimization and preloading
+  </Accordion>
+</AccordionGroup>
+
+## Development Workflow
+
+1. **Feature Development**: Create new features in `src/features/[feature-name]/`
+2. **Component Creation**: Use `.component.tsx` suffix for UI components
+3. **Business Logic**: Implement in `.hook.ts` files
+4. **API Integration**: Use `.service.ts` for external calls
+5. **State Management**: Use appropriate store (TanStack Query vs Zustand)
+6. **Type Safety**: Define types in `.type.ts` files
+7. **Validation**: Use Zod schemas in `.schema.ts` files
+
+## Monitoring & Debugging
+
+<CardGroup cols={3}>
+  <Card title="TanStack Query DevTools" icon="bug">
+    Monitor server state, cache, and network requests
+  </Card>
+  <Card title="Zustand DevTools" icon="chart-line">
+    Inspect client state changes and actions
+  </Card>
+  <Card title="React DevTools" icon="react">
+    Component hierarchy and performance profiling
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Quick Start Guide](/frontend/quickstart) - Set up your development environment
+- [Component Library](/frontend/components) - Learn about our UI components
+- [API Integration](/frontend/api) - Connect to our backend services
+- [Testing Guide](/frontend/testing) - Write effective tests

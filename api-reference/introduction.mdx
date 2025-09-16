@@ -1,33 +1,30 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Reference"
+description: "Complete API documentation for the OpenSource Together platform"
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Welcome to the OpenSource Together API
 
-## Welcome
+The OpenSource Together platform provides comprehensive REST APIs for managing projects, users, and intelligent recommendations. Our APIs are designed to be intuitive, well-documented, and easy to integrate with your applications.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## API Overview
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+Our platform consists of two main API services:
 
-## Authentication
-
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
-
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+<CardGroup cols={2}>
+  <Card
+    title="NestJS Backend API"
+    icon="server"
+    href="/api-reference/endpoint/nest"
+  >
+    Core platform API for user management, project operations, and
+    authentication
+  </Card>
+  <Card
+    title="AI Engine API"
+    icon="brain"
+    href="/api-reference/endpoint/ai-engine"
+  >
+    Intelligent recommendation API powered by machine learning
+  </Card>
+</CardGroup>
