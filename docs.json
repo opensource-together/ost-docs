@@ -62,11 +62,20 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["ai/overview"]
+            "pages": [
+              "ai/overview"
+            ]
           },
           {
             "group": "Developer Guide",
-            "pages": ["ai/quickstart", "ai/faq"]
+            "pages": [
+              "ai/README",
+              "ai/deployment",
+              "ai/devops_guide",
+              "ai/installation",
+              "ai/structure",
+              "ai/troubleshooting"
+            ]
           }
         ]
       },
