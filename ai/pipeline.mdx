@@ -1,0 +1,90 @@
+The OST AI Engine pipeline orchestrates the scraping, ranking, normalization, and insertion of trending open-source projects into the database. Dagster manages the workflow, ensuring each step is executed reliably and data quality is maintained.
+
+## Job Scheduling & Definition
+
+Below are visual diagrams showing how the GitHub scraping job is scheduled and defined in Dagster:
+
+<div style={{ marginTop: "2rem" }}>
+  <div style={{ display: "flex", justifyContent: "center" }}>
+    <img
+      alt="GitHub Scraper Job Schedule"
+      src="../../images/ai/github_scraper_job_schedule.png"
+      width="100%"
+      style={{ borderRadius: "8px", marginBottom: "0.5rem" }}
+    />
+  </div>
+  <p style={{ fontSize: "0.95rem" }}>
+    <b>Job Schedule:</b> The pipeline is scheduled to run automatically every 6 hours, keeping the database up to date with the latest trending projects and respecting the rate-limiting of the GitHub API.
+  </p>
+</div>
+
+<div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "2rem" }}>
+  <img
+    alt="GitHub Scraper Job Definition"
+    src="../../images/ai/github_scraper_job_definition.png"
+    width="40%"
+    style={{ borderRadius: "8px", marginBottom: "0.5rem" }}
+  />
+</div>
+<p style={{ fontSize: "0.95rem", textAlign: "left" }}>
+  <b>Job Definition:</b> The job includes four main assets: scraping, ranking, mapping, and database insertion, with data quality checks at each stage.
+</p>
+
+
+  <div style={{ marginTop: "2rem" }}>
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <img
+        alt="GitHub Scraper Assets"
+        src="../../images/ai/github_scraper_assets.png"
+        width="100%"
+        style={{ borderRadius: "8px", marginBottom: "0.5rem" }}
+      />
+    </div>
+    <p style={{ fontSize: "0.95rem" }}>
+      <b>Assets Overview:</b> Each asset represents a distinct step in the pipeline, from data collection to database insertion, ensuring modularity and maintainability.
+    </p>
+  </div>
+
+
+## Asset Checks
+
+Dagster asset checks validate the quality and consistency of data at each pipeline step. Here are the main checks used in the OST AI Engine pipeline:
+
+| Check Name                           | Purpose |
+|-------------------------------------- |--------------------------------------------------------------------------|
+| github_top_projects_description_check | Ensures all projects have a non-empty description |
+| github_top_projects_date_check        | Verifies projects were created after the minimum date |
+| github_mapping_type_check             | Checks that the mapping output is a non-empty list |
+| github_mapping_required_fields_check  | Validates required fields and types (title, repoUrl, provider, published, trending) |
+| github_mapping_duplicate_url_check    | Detects duplicate repoUrl or githubUrl values |
+| github_to_db_insert_count_check       | Confirms the number of DB inserts matches the number of mapped projects |
+| github_to_db_error_check              | Checks for insertion errors in the logs |
+| github_to_db_consistency_check        | Verifies that inserted projects exist in the database |
+| github_to_db_uniqueness_check         | Ensures repoUrl values are unique in the database |
+| github_to_db_mapping_match_check      | Checks that DB fields match the mapping (e.g., title/repoUrl) |
+
+Below are visual examples of asset checks in the Dagster UI:
+
+<div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
+  <img
+    alt="GitHub Mapping Checks Overview"
+    src="../../images/ai/github_mapping_checks.png"
+    width="70%"
+    style={{ borderRadius: "8px", marginBottom: "0.5rem" }}
+  />
+</div>
+<p style={{ fontSize: "0.95rem", textAlign: "left" }}>
+  <b>Checks Overview:</b> The Dagster UI displays the status of each asset check, making it easy to monitor data quality in real time.
+</p>
+
+<div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
+  <img
+    alt="GitHub Mapping Checks Details"
+    src="../../images/ai/github_mapping_checks_details.png"
+    width="70%"
+    style={{ borderRadius: "8px", marginBottom: "0.5rem" }}
+  />
+</div>
+<p style={{ fontSize: "0.95rem", textAlign: "left" }}>
+  <b>Checks Details:</b> Detailed results show which projects passed or failed each check, with error messages for troubleshooting.
+</p>

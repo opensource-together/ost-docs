@@ -69,10 +69,9 @@
           {
             "group": "Developer Guide",
             "pages": [
-              "ai/deployment",
-              "ai/devops_guide",
-              "ai/installation",
+              "ai/pipeline",
               "ai/structure",
+              "ai/installation",
               "ai/troubleshooting"
             ]
           }
