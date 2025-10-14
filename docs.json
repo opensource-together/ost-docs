@@ -69,7 +69,6 @@
           {
             "group": "Developer Guide",
             "pages": [
-              "ai/README",
               "ai/deployment",
               "ai/devops_guide",
               "ai/installation",
