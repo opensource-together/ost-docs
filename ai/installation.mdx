@@ -1,6 +1,3 @@
-
-
-
 # OST AI Engine – Installation & Deployment Guide
 
 This guide explains how to install, configure, and deploy the OST AI Engine platform, with a focus on centralized configuration, multi-language management, Dockerization, and Dagster orchestration.
@@ -19,10 +16,10 @@ Project configuration is centralized in the `config/config.yaml` file, which is 
 - **Why this choice?** YAML is accessible by all languages (Python, Go, Node.js), ensuring consistent parameters (tokens, queries, N projects, etc.) throughout the pipeline.
 - **Workflow:**
     1. Environment variables are defined in `.env`.
-    2. On startup or build, `config.py` reads these variables and generates/updates `config.yaml`.
+    2. On startup or build, `config/config.py` reads these variables and generates/updates `config/config.yaml`.
     3. All components (Dagster, Go scrapers, Prisma) read config from YAML.
 
-**Example config.yaml:**
+**Example config.example.yaml:**
 ```yaml
 DATABASE_URL: postgresql://postgres:postgres@ost-db:5432/ost_dev
 GITHUB_ACCESS_TOKEN: ...
@@ -35,13 +32,15 @@ GITHUB_TOP_N: 30
 
 Copy `.env.example` to `.env` and fill in the values:
 ```ini
+OST_CONFIG_PATH=config/config.yaml
+
+DATABASE_URL=postgresql://ai-engine:ai-engine@localhost:7777/ai-engine
 POSTGRES_DB=ai-engine
 POSTGRES_USER=ai-engine
 POSTGRES_PASSWORD=ai-engine
-DATABASE_URL=postgresql://ai-engine:ai-engine@localhost:7777/ai-engine
+
 GITHUB_ACCESS_TOKEN=your_github_access_token_here
 GITLAB_ACCESS_TOKEN=your_gitlab_access_token_here
-OST_CONFIG_PATH=config/config.yaml
 ```
 
 **Propagation:**
@@ -50,7 +49,7 @@ OST_CONFIG_PATH=config/config.yaml
 - Go and Dagster read config from YAML (never directly from `.env`).
 
 | Variable              | Description                  | Example |
-|-----------------------|-----------------------------|---------|
+|-----------------------|------------------------------|---------|
 | DATABASE_URL          | PostgreSQL connection URL    | postgresql://db_user:db_password@localhost:port/db_name |
 | POSTGRES_DB           | Database name                | db_name |
 | POSTGRES_USER         | Database user                | db_user |
@@ -67,7 +66,6 @@ cd prisma
 npm install
 ```
 
-docker compose up -d
 ## Database Setup
 Start PostgreSQL with Docker Compose:
 ```bash
@@ -94,18 +92,23 @@ The Dockerfile builds the entire stack:
 **Dockerfile excerpt:**
 ```dockerfile
 FROM python:3.13-slim AS base
+
 WORKDIR /app
+
 COPY pyproject.toml poetry.lock ./
 RUN pip install poetry && poetry install --no-root --only main
+
 COPY src/ src/
 COPY prisma/ prisma/
 COPY .env .env
 COPY config/ config/
+
 RUN poetry run python config/config.py
 RUN poetry run prisma generate
 ENV GOARCH=arm64
 RUN cd src/infrastructure/services/go/github && go build -o /app/github-scraper main.go
 ENV DAGSTER_HOME=/app/src/dagster
+
 EXPOSE 3000
 CMD ["poetry", "run", "dagster-daemon", "run"]
 ```
@@ -122,28 +125,3 @@ export DAGSTER_HOME="$PWD/src/dagster"
 poetry run dagster dev -m src.dagster.definitions --host 127.0.0.1 --port 3000
 ```
 Accès UI Dagster : [http://localhost:3000](http://localhost:3000)
-
-## Structure du projet
-```python
-src/
-    dagster/
-        assets.py           # Dagster assets definition
-        dagster.yaml        # Dagster config instance
-        definitions.py      # Dagster jobs, schedules, sensors
-        config/             # Centralized config files
-            config.py       # Generates YAML from env
-            github_mapping.py
-            local.yaml      # Local config (optional)
-            prod.yaml       # Prod config (optional)
-    infrastructure/
-        services/
-            go/
-                github/
-                    go.mod, main.go, main_test.go
-                gitlab/
-                    go.mod, main.go, main_test.go
-prisma/
-    schema.prisma, migrations/, seed/
-docs/
-    ai/*.mdx
-```
