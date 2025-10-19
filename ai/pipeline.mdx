@@ -53,7 +53,6 @@ Dagster asset checks validate the quality and consistency of data at each pipeli
 | Check Name                           | Purpose |
 |-------------------------------------- |--------------------------------------------------------------------------|
 | github_top_projects_description_check | Ensures all projects have a non-empty description |
-| github_top_projects_date_check        | Verifies projects were created after the minimum date |
 | github_mapping_type_check             | Checks that the mapping output is a non-empty list |
 | github_mapping_required_fields_check  | Validates required fields and types (title, repoUrl, provider, published, trending) |
 | github_mapping_duplicate_url_check    | Detects duplicate repoUrl or githubUrl values |
@@ -86,5 +85,5 @@ Below are visual examples of asset checks in the Dagster UI:
   />
 </div>
 <p style={{ fontSize: "0.95rem", textAlign: "left" }}>
-  <b>Checks Details:</b> Detailed results show which projects passed or failed each check, with error messages for troubleshooting.
-</p>
+  <b>Checks Details:</b> Detailed results show which projects passed or failed each check, with error messages for troubleshooting and data validation. All errors and warnings are surfaced in the Dagster UI for rapid debugging.
+  </p>
