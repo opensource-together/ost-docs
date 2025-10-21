@@ -1,5 +1,20 @@
 The OST AI Engine pipeline orchestrates the scraping, ranking, normalization, and insertion of trending open-source projects into the database. Dagster manages the workflow, ensuring each step is executed reliably and data quality is maintained.
 
+Each asset loads its configuration from Dagster resources (`context.resources.config`) and builds its environment at runtime using `build_scraper_env`. Go scrapers are compiled binaries executed by assets via `subprocess`, and mapping is applied using centralized dictionaries from `src/dagster/config/map/mapping_map.py`.
+
+## Assets (GitHub flow)
+
+- `github_scraper_asset` (Go): runs `/app/github-scraper` with env from `PipelineConfig` (query, tokens, API URL).
+- `github_top_projects_asset` (Python): filters/ranks projects (stars, description), selects top N.
+- `github_mapping_asset` (Python): transforms raw fields using `GITHUB_TO_PROJECT_MAPPING`.
+- `github_to_db_asset` (Python): inserts into PostgreSQL via Prisma client (no update on conflict).
+
+## Resources & Config
+
+- Resource: `config` → instance of `PipelineConfig` (loaded from `config/cfg.yaml`).
+- Env builder: `build_scraper_env(cfg)` → minimal, explicit env for scrapers (no os.environ leaks).
+- Schedules/Jobs: defined in code (`definitions.py`), cron pulled from config (`github_scraper_cron`).
+
 ## Job Scheduling & Definition
 
 Below are visual diagrams showing how the GitHub scraping job is scheduled and defined in Dagster:

@@ -2,24 +2,47 @@
 ```python
 config/
     config.py               # Generates YAML from env
-    config.yaml             # Centralized config file
+    cfg.yaml                # Centralized config file
+    
+# Project Structure
 src/
-    dagster/
-        assets.py           # Dagster assets definition
-        dagster.yaml        # Dagster config instance
-        definitions.py      # Dagster jobs, schedules, sensors
-        config/             # Centralized config files
-            config.py       # Source YAML generated on project root config/config.yaml
-            github_mapping.py
-    infrastructure/
-        services/
-            go/
-                github/
-                    go.mod, main.go, main_test.go
-                gitlab/
-                    go.mod, main.go, main_test.go
-prisma/
-    schema.prisma, migrations/, seed/
-docs/
-    ai/*.mdx
-```
+    config/
+        cfg.py                  # Generates cfg.yaml from .env
+        cfg.yaml                # Centralized config (generated)
+        cfg.example.*
+
+    src/
+        dagster/
+            assets.py             # Assets (scrape → rank → map → insert)
+            dagster.yaml          # Dagster instance settings
+            definitions.py        # Jobs, schedules, asset checks
+            config/
+                cfg_resource.py     # Dagster resource providing PipelineConfig
+                load_cfg.py         # PipelineConfig loader (reads cfg.yaml)
+                map/
+                    mapping_map.py    # Centralized GitHub & GitLab mappings
+
+    services/
+        go/
+            github/
+                go.mod, go.sum, main.go    # builds /app/github-scraper
+            gitlab/
+                go.mod, go.sum, main.go    # builds /app/gitlab-scraper
+
+    prisma/
+        schema.prisma
+        migrations/
+        seed/
+
+    docs/
+        ost-docs/ai/*.mdx
+
+    Dockerfile
+    docker-compose.yml
+    ```
+
+    ## Mapping Logic
+
+    Mappings between scraper fields and the unified Project model are centralized in `src/dagster/config/map/mapping_map.py`.
+    They are static Python dictionaries imported by assets (not Dagster resources), keeping the code simple and predictable.
+    ````
