@@ -28,6 +28,16 @@ mint dev
 
 View your local preview at `http://localhost:3000`.
 
+## API Reference Generation
+
+The API reference is generated from the OpenAPI specification in the `api-reference/openapi.json` file.
+
+To generate the API reference, run the following command:
+
+```
+npx @mintlify/scraping@latest openapi-file api-reference/openapi.json -o api-reference/endpoint
+```
+
 ## Publishing changes
 
 Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.

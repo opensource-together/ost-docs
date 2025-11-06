@@ -88,26 +88,51 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "API Documentation",
+            "group": "Introduction",
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "Nest.js API Examples",
+            "group": "TechStacks",
+            "pages": ["api-reference/endpoint/techstacks/get-all-tech-stacks"]
+          },
+          {
+            "group": "User",
             "pages": [
-              "api-reference/endpoint/nest/skeletons/get-skeleton",
-              "api-reference/endpoint/nest/skeletons/create-skeleton",
-              "api-reference/endpoint/nest/skeletons/delete-skeleton",
-              "api-reference/endpoint/nest/skeletons/update-skeleton",
-              "api-reference/endpoint/nest/users/users-me",
-              "api-reference/endpoint/nest/users/user-get",
-              "api-reference/endpoint/nest/users/user-update"
+              "api-reference/endpoint/user/get-current-authenticated-user",
+              "api-reference/endpoint/user/list-user-repositories-from-github-or-gitlab",
+              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab",
+              "api-reference/endpoint/user/list-user-projects",
+              "api-reference/endpoint/user/get-a-user-by-id",
+              "api-reference/endpoint/user/update-a-user",
+              "api-reference/endpoint/user/list-projects-by-user-id",
+              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab-1",
+              "api-reference/endpoint/user/update-user-profile-picture"
             ]
           },
           {
-            "group": "AI Engine API Examples",
+            "group": "Categories",
+            "pages": ["api-reference/endpoint/categories/get-all-categories"]
+          },
+          {
+            "group": "Project",
             "pages": [
-              "api-reference/endpoint/ai-engine/recommendations/get-recommendations"
+              "api-reference/endpoint/project/list-projects-with-filters-and-pagination",
+              "api-reference/endpoint/project/create-a-new-project",
+              "api-reference/endpoint/project/get-project-repository-summary",
+              "api-reference/endpoint/project/get-a-project-by-id",
+              "api-reference/endpoint/project/delete-a-project",
+              "api-reference/endpoint/project/update-a-project",
+              "api-reference/endpoint/project/get-project-issues",
+              "api-reference/endpoint/project/get-a-project-issue",
+              "api-reference/endpoint/project/claim-project-ownership",
+              "api-reference/endpoint/project/add-image-to-project-gallery",
+              "api-reference/endpoint/project/remove-image-from-project-gallery",
+              "api-reference/endpoint/project/update-project-logo"
             ]
+          },
+          {
+            "group": "Health",
+            "pages": ["api-reference/endpoint/health/check-apps-health"]
           }
         ]
       },
