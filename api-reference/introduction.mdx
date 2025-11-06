@@ -11,26 +11,74 @@ description: "Complete API documentation for the OpenSource Together platform"
 
 ## Welcome to the OpenSource Together API
 
-The OpenSource Together platform provides comprehensive REST APIs for managing projects, users, and intelligent recommendations. Our APIs are designed to be intuitive, well-documented, and easy to integrate with your applications.
+The OpenSource Together platform provides a comprehensive REST API for managing projects, users, tech stacks, and categories. Our API is designed to be intuitive, well-documented, and easy to integrate with your applications.
 
-## API Overview
+## Base URL
 
-Our platform consists of two main API services:
+```
+http://localhost:4000
+```
+
+## Authentication
+
+Most endpoints require authentication. The API uses cookie-based authentication with Better Auth. Include credentials in your requests:
+
+```typescript
+fetch("http://localhost:4000/api/users/me", {
+  credentials: "include",
+});
+```
+
+## Response Format
+
+All API responses follow a consistent format:
+
+```json
+{
+  "data": {
+    /* response data */
+  },
+  "timestamp": "2025-09-03T13:04:43.353Z"
+}
+```
+
+Error responses:
+
+```json
+{
+  "error": {
+    "message": "Error message",
+    "code": "ERROR_CODE",
+    "details": {}
+  },
+  "timestamp": "2025-09-03T13:04:43.353Z"
+}
+```
+
+## API Endpoints
 
 <CardGroup cols={2}>
-  <Card
-    title="NestJS Backend API"
-    icon="server"
-    href="/api-reference/endpoint/nest"
-  >
-    Core platform API for user management, project operations, and
-    authentication
+  <Card title="Users" icon="users" href="/api-reference/endpoint/users">
+    User management, profiles, and authentication
+  </Card>
+  <Card title="Projects" icon="folder" href="/api-reference/endpoint/projects">
+    Project creation, management, and discovery
   </Card>
   <Card
-    title="AI Engine API"
-    icon="brain"
-    href="/api-reference/endpoint/ai-engine"
+    title="Tech Stacks"
+    icon="code"
+    href="/api-reference/endpoint/techstacks"
   >
-    Intelligent recommendation API powered by machine learning
+    Available technologies and languages
+  </Card>
+  <Card
+    title="Categories"
+    icon="tags"
+    href="/api-reference/endpoint/categories"
+  >
+    Project categories and classifications
+  </Card>
+  <Card title="Health" icon="heartbeat" href="/api-reference/endpoint/health">
+    Application health check endpoint
   </Card>
 </CardGroup>

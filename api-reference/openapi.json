@@ -1,31 +1,14 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/skeletons": {
+    "/techstacks": {
       "get": {
-        "description": "Get all skeletons",
-        "operationId": "SkeletonController_findAll",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "size",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "number"
-            }
-          }
-        ],
+        "description": "Retrieve all available tech stacks ordered by type and name",
+        "operationId": "TechStackController_findAll",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": "Paginated results",
+            "description": "Tech stacks retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -34,7 +17,401 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/SkeletonEntity"
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^tst_[0-9a-fA-F]{32}$",
+                            "example": "tst_34c5c442c32d45c9b3d8688c613fa914",
+                            "description": "Public ID of the tech stack"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "React",
+                            "description": "Name of the technology or tool"
+                          },
+                          "iconUrl": {
+                            "type": "string",
+                            "example": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
+                            "description": "URL to the technology icon"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": ["TECH", "LANGUAGE"],
+                            "example": "TECH",
+                            "description": "Type of the tech stack item"
+                          }
+                        },
+                        "required": ["id", "name", "iconUrl", "type"]
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-16T20:20:51.013Z",
+                      "description": "Response timestamp"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                },
+                "examples": {
+                  "Multiple tech stacks": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "tst_34c5c442c32d45c9b3d8688c613fa914",
+                          "name": "React",
+                          "iconUrl": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg",
+                          "type": "TECH"
+                        },
+                        {
+                          "id": "tst_c374e6f51e2f4347a58a2067e286a316",
+                          "name": "TypeScript",
+                          "iconUrl": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg",
+                          "type": "LANGUAGE"
+                        }
+                      ],
+                      "timestamp": "2025-09-16T20:20:51.013Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all tech stacks",
+        "tags": ["TechStacks"]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "description": "Returns the current authenticated user with GitHub contribution graph and connected providers (GitHub, GitLab, Google) if available",
+        "operationId": "UserController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get current authenticated user",
+        "tags": ["User"]
+      }
+    },
+    "/users/me/repos": {
+      "get": {
+        "description": "Retrieves repositories for the authenticated user. Returns a structured response with github and gitlab properties, containing repositories for each provider (or null if not connected/fetched).",
+        "operationId": "UserController_listRepos",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "description": "Git provider (github or gitlab). If specified, only fetches from that provider. If not provided, fetches from all connected providers in parallel.",
+            "schema": {
+              "enum": ["github", "gitlab"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of repositories per page (max 100)",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Repositories retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RepositoriesResponseSchema"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid provider or not connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List user repositories from GitHub or GitLab",
+        "tags": ["User"]
+      }
+    },
+    "/users/me/pull-requests": {
+      "get": {
+        "description": "Retrieves pull requests for the authenticated user. Returns a structured response with github and gitlab properties, containing pull requests for each provider (or null if not connected/fetched).",
+        "operationId": "UserController_listPullRequests",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "description": "Git provider (github or gitlab). If specified, only fetches from that provider. If not provided, fetches from all connected providers in parallel.",
+            "schema": {
+              "enum": ["github", "gitlab"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of pull requests per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Filter pull requests by state (default: all)",
+            "schema": {
+              "enum": ["open", "closed", "merged", "all"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pull requests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestsResponseSchema"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid provider or not connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List user pull requests from GitHub or GitLab",
+        "tags": ["User"]
+      }
+    },
+    "/users/me/projects": {
+      "get": {
+        "description": "Get a paginated list of projects for the authenticated user",
+        "operationId": "UserController_listProjects",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of projects per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Whether to include published projects",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectEntity"
                       }
                     },
                     "pagination": {
@@ -66,226 +443,9 @@
                 }
               }
             }
-          }
-        },
-        "summary": "Get all skeletons",
-        "tags": ["Skeleton"]
-      },
-      "post": {
-        "description": "Create a new skeleton with the provided data",
-        "operationId": "SkeletonController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSkeletonDto"
-              },
-              "examples": {
-                "Complete example": {
-                  "value": {
-                    "name": "My Skeleton",
-                    "description": "Description of the skeleton"
-                  }
-                },
-                "Minimal example": {
-                  "value": {
-                    "name": "My Skeleton"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Skeleton created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/SkeletonEntity"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2025-09-03T13:04:43.353Z"
-                    }
-                  },
-                  "required": ["data", "timestamp"]
-                }
-              }
-            }
           },
-          "400": {
-            "description": "Validation failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "string"
-                        },
-                        "code": {
-                          "type": "string"
-                        },
-                        "details": {
-                          "type": "object"
-                        }
-                      }
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Create a new skeleton",
-        "tags": ["Skeleton"]
-      }
-    },
-    "/skeletons/{id}": {
-      "get": {
-        "description": "Get a skeleton by id",
-        "operationId": "SkeletonController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Returns the skeleton",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/SkeletonEntity"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2025-09-03T13:04:43.353Z"
-                    }
-                  },
-                  "required": ["data", "timestamp"]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Skeleton not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "string"
-                        },
-                        "code": {
-                          "type": "string"
-                        },
-                        "details": {
-                          "type": "object"
-                        }
-                      }
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get a skeleton by id",
-        "tags": ["Skeleton"]
-      },
-      "patch": {
-        "description": "Update an existing skeleton with the provided data",
-        "operationId": "SkeletonController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "Public ID of the skeleton to update",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSkeletonDto"
-              },
-              "examples": {
-                "Update name and description": {
-                  "value": {
-                    "name": "Updated Skeleton",
-                    "description": "Updated description"
-                  }
-                },
-                "Update name only": {
-                  "value": {
-                    "name": "New Name"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Skeleton updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/SkeletonEntity"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time",
-                      "example": "2025-09-03T13:04:43.353Z"
-                    }
-                  },
-                  "required": ["data", "timestamp"]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation failed",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
@@ -315,7 +475,7 @@
             }
           },
           "404": {
-            "description": "Skeleton not found",
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -345,19 +505,7 @@
             }
           }
         },
-        "summary": "Update a skeleton",
-        "tags": ["Skeleton"]
-      }
-    },
-    "/users/me": {
-      "get": {
-        "operationId": "UserController_me",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
+        "summary": "List user projects",
         "tags": ["User"]
       }
     },
@@ -466,24 +614,21 @@
                     "name": "New Name"
                   }
                 },
-                "Update with social links": {
+                "Update social links": {
                   "value": {
                     "name": "John Doe",
-                    "bio": "Software developer",
-                    "jobTitle": "Senior Developer",
-                    "socialLinks": [
-                      {
-                        "type": "GITHUB",
-                        "url": "https://github.com/johndoe"
-                      },
-                      {
-                        "type": "TWITTER",
-                        "url": "https://twitter.com/johndoe"
-                      },
-                      {
-                        "type": "LINKEDIN",
-                        "url": "https://linkedin.com/in/johndoe"
-                      }
+                    "githubUrl": "https://github.com/johndoe",
+                    "twitterUrl": "https://twitter.com/johndoe",
+                    "linkedinUrl": null,
+                    "discordUrl": null,
+                    "websiteUrl": "https://johndoe.com"
+                  }
+                },
+                "Update tech stacks": {
+                  "value": {
+                    "userTechStacks": [
+                      "tst_c54b633eb12f4900b92b34e222096449",
+                      "tst_d54b633eb12f4900b92b34e222096450"
                     ]
                   }
                 }
@@ -607,6 +752,2077 @@
         "summary": "Update a user",
         "tags": ["User"]
       }
+    },
+    "/users/{id}/projects": {
+      "get": {
+        "description": "Get a paginated list of projects for a specific user",
+        "operationId": "UserController_listUserProjects",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the user",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of projects per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Whether to include published projects",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectEntity"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "lastPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "currentPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "size": {
+                          "type": "number",
+                          "default": 10
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List projects by user ID",
+        "tags": ["User"]
+      }
+    },
+    "/users/{id}/pull-requests": {
+      "get": {
+        "description": "Retrieves pull requests for the authenticated user. Returns a structured response with github and gitlab properties, containing pull requests for each provider (or null if not connected/fetched).",
+        "operationId": "UserController_listUserPullRequests",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "provider",
+            "required": false,
+            "in": "query",
+            "description": "Git provider (github or gitlab). If specified, only fetches from that provider. If not provided, fetches from all connected providers in parallel.",
+            "schema": {
+              "enum": ["github", "gitlab"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of pull requests per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "description": "Filter pull requests by state (default: all)",
+            "schema": {
+              "enum": ["open", "closed", "merged", "all"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pull requests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestsResponseSchema"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid provider or not connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List user pull requests from GitHub or GitLab",
+        "tags": ["User"]
+      }
+    },
+    "/users/{id}/logo": {
+      "patch": {
+        "description": "Replace the user profile picture with a custom image. Accepts PNG, JPEG, or WEBP format. Maximum file size: 5MB.",
+        "operationId": "UserController_updateLogo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the user",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logo updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/UserEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update user profile picture",
+        "tags": ["User"]
+      }
+    },
+    "/categories": {
+      "get": {
+        "description": "Retrieve all available categories",
+        "operationId": "CategoryController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Categories retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^tst_[0-9a-fA-F]{32}$",
+                            "example": "tst_34c5c442c32d45c9b3d8688c613fa914",
+                            "description": "Public ID of the tech stack"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "React",
+                            "description": "Name of the technology or tool"
+                          }
+                        },
+                        "required": ["id", "name"]
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-16T20:20:51.013Z",
+                      "description": "Response timestamp"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                },
+                "examples": {
+                  "Multiple tech stacks": {
+                    "value": {
+                      "data": [
+                        {
+                          "id": "cat_34c5c442c32d45c9b3d8688c613fa914",
+                          "name": "Developer Tools"
+                        },
+                        {
+                          "id": "cat_c374e6f51e2f4347a58a2067e286a316",
+                          "name": "API & Microservices"
+                        }
+                      ],
+                      "timestamp": "2025-09-16T20:20:51.013Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all categories",
+        "tags": ["Categories"]
+      }
+    },
+    "/projects": {
+      "get": {
+        "description": "Get all published projects with optional filters, pagination, and repository information",
+        "operationId": "ProjectController_list",
+        "parameters": [
+          {
+            "name": "published",
+            "required": false,
+            "in": "query",
+            "description": "Filter by published status. If not provided, returns all projects.",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "orderDirection",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "orderBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "enum": ["createdAt", "title", "trending"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "categories",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated list of category public IDs. Projects must have ALL specified categories (AND logic).",
+            "schema": {
+              "example": "cat_ce9811d7a8964dab823393249a26cd81,cat_ce9811d7a8964dab823393249a26cd82",
+              "type": "string"
+            }
+          },
+          {
+            "name": "techStacks",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated list of techstack public IDs. Projects must have ALL specified techstacks (AND logic).",
+            "schema": {
+              "example": "tst_ce9811d7a8964dab823393249a26cd81,tst_ce9811d7a8964dab823393249a26cd82",
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page (minimum: 1, maximum: 100)",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination (minimum: 1)",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Projects found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectEntity"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "lastPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "currentPage": {
+                          "type": "number",
+                          "default": 1
+                        },
+                        "size": {
+                          "type": "number",
+                          "default": 10
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List projects with filters and pagination",
+        "tags": ["Project"]
+      },
+      "post": {
+        "description": "Create a new project for the authenticated user",
+        "operationId": "ProjectController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectDto"
+              },
+              "examples": {
+                "Basic project": {
+                  "value": {
+                    "title": "My Awesome Project",
+                    "description": "A revolutionary web application",
+                    "provider": "GITHUB"
+                  }
+                },
+                "Complete project": {
+                  "value": {
+                    "title": "Full Stack App",
+                    "description": "A complete web application with modern stack",
+                    "repoUrl": "https://github.com/username/repository",
+                    "provider": "GITHUB",
+                    "websiteUrl": "https://myproject.com",
+                    "twitterUrl": "https://twitter.com/myproject",
+                    "projectTechStacks": [
+                      "tst_c54b633eb12f4900b92b34e222096449",
+                      "tst_d54b633eb12f4900b92b34e222096450"
+                    ],
+                    "projectCategories": [
+                      "cat_c54b633eb12f4900b92b34e222096449"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new project",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/repository-summary": {
+      "get": {
+        "description": "Retrieve repository information (stars, forks, issues, etc.) from the Git provider",
+        "operationId": "ProjectController_getRepositorySummary",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Repository summary found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/RepositoryDetailsResponse"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid repository URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get project repository summary",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "description": "Get a project by id",
+        "operationId": "ProjectController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a project by id",
+        "tags": ["Project"]
+      },
+      "patch": {
+        "description": "Update an existing project (only allowed by project owner)",
+        "operationId": "ProjectController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectDto"
+              },
+              "examples": {
+                "Update title and description": {
+                  "value": {
+                    "title": "Updated Project Title",
+                    "description": "Updated project description"
+                  }
+                },
+                "Update social links": {
+                  "value": {
+                    "websiteUrl": "https://newdomain.com",
+                    "twitterUrl": "https://twitter.com/newhandle",
+                    "linkedinUrl": null
+                  }
+                },
+                "Update tech stacks and categories": {
+                  "value": {
+                    "projectTechStacks": [
+                      "tst_c54b633eb12f4900b92b34e222096449",
+                      "tst_d54b633eb12f4900b92b34e222096450"
+                    ],
+                    "projectCategories": [
+                      "cat_c54b633eb12f4900b92b34e222096449"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update a project",
+        "tags": ["Project"]
+      },
+      "delete": {
+        "description": "Delete an existing project (only allowed by project owner)",
+        "operationId": "ProjectController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Project deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete a project",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/issues": {
+      "get": {
+        "description": "Retrieve all issues from the project repository",
+        "operationId": "ProjectController_getIssues",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issues found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/IssueResponse"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get project issues",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/issues/{issueNumber}": {
+      "get": {
+        "description": "Get detailed information about a specific issue from a project",
+        "operationId": "ProjectController_getIssue",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "issueNumber",
+            "required": true,
+            "in": "path",
+            "description": "Issue number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issue found"
+          },
+          "400": {
+            "description": "Invalid repository URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project or issue not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a project issue",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/claims": {
+      "post": {
+        "description": "If the project has no owner, a user with repository access can claim it.",
+        "operationId": "ProjectController_claim",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project claimed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or already owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Claim project ownership",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/images": {
+      "post": {
+        "description": "Upload an image to the project gallery (maximum 5 images per project). Accepts PNG, JPEG, or WEBP format. Maximum file size: 10MB.",
+        "operationId": "ProjectController_uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add image to project gallery",
+        "tags": ["Project"]
+      },
+      "delete": {
+        "description": "Delete an image from the project gallery by providing its URL.",
+        "operationId": "ProjectController_deleteImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteProjectImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Remove image from project gallery",
+        "tags": ["Project"]
+      }
+    },
+    "/projects/{id}/logo": {
+      "patch": {
+        "description": "Replace the project logo with a custom image. Accepts PNG, JPEG, or WEBP format. Maximum file size: 5MB.",
+        "operationId": "ProjectController_updateLogo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Public ID of the project",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logo updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectEntity"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-03T13:04:43.353Z"
+                    }
+                  },
+                  "required": ["data", "timestamp"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update project logo",
+        "tags": ["Project"]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Check app's health",
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check app's health",
+        "tags": ["Health"]
+      }
     }
   },
   "info": {
@@ -629,89 +2845,621 @@
   ],
   "components": {
     "schemas": {
-      "SkeletonEntity": {
+      "ExperienceSchema": {
+        "type": "object",
+        "properties": {
+          "startAt": {
+            "type": "string",
+            "description": "Start date of the experience",
+            "format": "date",
+            "example": "2023-01-15"
+          },
+          "endAt": {
+            "type": "string",
+            "description": "End date of the experience (null if current)",
+            "format": "date",
+            "example": "2023-12-31",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Title or position of the experience",
+            "example": "Senior Software Engineer"
+          },
+          "url": {
+            "type": "string",
+            "description": "Optional URL related to the experience (company website, project, etc.)",
+            "example": "https://company.com",
+            "nullable": true
+          }
+        },
+        "required": ["startAt", "endAt", "title", "url"]
+      },
+      "TechStackEntity": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "pattern": "^ske_[0-9a-fA-F]{32}$",
-            "example": "ske_c54b633eb12f4900b92b34e222096449"
+            "pattern": "^tst_[0-9a-fA-F]{32}$",
+            "example": "tst_c54b633eb12f4900b92b34e222096449"
+          },
+          "name": {
+            "type": "string",
+            "example": "React"
+          },
+          "iconUrl": {
+            "type": "string",
+            "example": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["TECH", "LANGUAGE"],
+            "example": "TECH"
+          }
+        },
+        "required": ["id", "name", "iconUrl", "type"]
+      },
+      "CategoryEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cat_[0-9a-fA-F]{32}$",
+            "example": "cat_c54b633eb12f4900b92b34e222096449"
+          },
+          "name": {
+            "type": "string",
+            "example": "API & Microservices"
+          }
+        },
+        "required": ["id", "name"]
+      },
+      "ContributionDaySchema": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Date of the contribution day",
+            "example": "2025-10-06"
+          },
+          "contributionCount": {
+            "type": "number",
+            "description": "Number of contributions on this day",
+            "example": 5
+          },
+          "contributionLevel": {
+            "type": "string",
+            "description": "Contribution level for the day",
+            "enum": [
+              "NONE",
+              "FIRST_QUARTILE",
+              "SECOND_QUARTILE",
+              "THIRD_QUARTILE",
+              "FOURTH_QUARTILE"
+            ],
+            "example": "SECOND_QUARTILE"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color code for the contribution level",
+            "example": "#40c463"
+          }
+        },
+        "required": ["date", "contributionCount", "contributionLevel", "color"]
+      },
+      "ContributionWeekSchema": {
+        "type": "object",
+        "properties": {
+          "contributionDays": {
+            "description": "Array of contribution days in this week",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContributionDaySchema"
+            }
+          }
+        },
+        "required": ["contributionDays"]
+      },
+      "ContributionGraphSchema": {
+        "type": "object",
+        "properties": {
+          "totalContributions": {
+            "type": "number",
+            "description": "Total number of contributions in the period",
+            "example": 720
+          },
+          "weeks": {
+            "description": "Array of weeks containing contribution data",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContributionWeekSchema"
+            }
+          }
+        },
+        "required": ["totalContributions"]
+      },
+      "UserEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^usr_[0-9a-fA-F]{32}$",
+            "example": "usr_c54b633eb12f4900b92b34e222096449"
           },
           "name": {
             "type": "string"
           },
-          "description": {
+          "email": {
+            "type": "string"
+          },
+          "image": {
             "type": "string",
             "nullable": true
           },
-          "myAttribute": {
+          "bio": {
             "type": "string",
             "nullable": true
+          },
+          "jobTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "userExperiences": {
+            "nullable": true,
+            "description": "User experiences with start date, end date, title and optional URL (max 10)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperienceSchema"
+            }
+          },
+          "githubUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://github.com/username"
+          },
+          "gitlabUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://gitlab.com/username"
+          },
+          "twitterUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://twitter.com/username"
+          },
+          "linkedinUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://linkedin.com/in/username"
+          },
+          "discordUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://discord.gg/server"
+          },
+          "websiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com"
+          },
+          "betaTester": {
+            "type": "boolean",
+            "description": "Indicates if the user is a beta tester",
+            "example": false
+          },
+          "connectedProviders": {
+            "description": "Connected providers",
+            "example": ["github", "gitlab"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userTechStacks": {
+            "description": "User tech stacks (max 10)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechStackEntity"
+            }
+          },
+          "userCategories": {
+            "description": "User categories (max 10)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryEntity"
+            }
+          },
+          "contributionGraph": {
+            "nullable": true,
+            "description": "GitHub contribution graph data with weekly contribution calendar",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContributionGraphSchema"
+              }
+            ]
           }
         },
-        "required": ["id", "name", "description", "myAttribute"]
+        "required": [
+          "id",
+          "name",
+          "email",
+          "image",
+          "bio",
+          "jobTitle",
+          "githubUrl",
+          "gitlabUrl",
+          "twitterUrl",
+          "linkedinUrl",
+          "discordUrl",
+          "websiteUrl",
+          "betaTester",
+          "connectedProviders"
+        ]
       },
-      "CreateSkeletonDto": {
+      "RepositoryDataSchema": {
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "description": "Name of the skeleton",
-            "example": "My Skeleton"
+            "type": "string"
           },
           "description": {
-            "type": "string",
-            "description": "Description",
-            "example": "The description of the skeleton",
+            "type": "object",
             "nullable": true
           },
-          "myAttribute": {
-            "type": "string",
-            "description": "A random attribute",
-            "example": "Any random attribute",
+          "url": {
+            "type": "string"
+          },
+          "html_url": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "pushed_at": {
+            "type": "string"
+          },
+          "stargazers_count": {
+            "type": "number"
+          },
+          "forks_count": {
+            "type": "number"
+          },
+          "open_issues_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "url",
+          "html_url",
+          "created_at",
+          "updated_at",
+          "pushed_at",
+          "stargazers_count",
+          "forks_count",
+          "open_issues_count"
+        ]
+      },
+      "RepositoryPaginationSchema": {
+        "type": "object",
+        "properties": {
+          "next": {
+            "type": "number",
+            "nullable": true
+          },
+          "last": {
+            "type": "number",
             "nullable": true
           }
         },
-        "required": ["name"]
+        "required": ["next", "last"]
       },
-      "UpdateSkeletonDto": {
+      "RepositoryPaginateSchema": {
         "type": "object",
         "properties": {
-          "name": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RepositoryDataSchema"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/RepositoryPaginationSchema"
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "RepositoriesResponseSchema": {
+        "type": "object",
+        "properties": {
+          "github": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepositoryPaginateSchema"
+              }
+            ]
+          },
+          "gitlab": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RepositoryPaginateSchema"
+              }
+            ]
+          }
+        },
+        "required": ["github", "gitlab"]
+      },
+      "PullRequestBranchSchema": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": ["from", "to"]
+      },
+      "UserPullRequestSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "object",
+            "nullable": true
+          },
+          "state": {
+            "type": "string"
+          },
+          "draft": {
+            "type": "boolean"
+          },
+          "number": {
+            "type": "number"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "closed_at": {
+            "type": "object",
+            "nullable": true
+          },
+          "merged_at": {
+            "type": "object",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          },
+          "branch": {
+            "$ref": "#/components/schemas/PullRequestBranchSchema"
+          }
+        },
+        "required": [
+          "title",
+          "repository",
+          "owner",
+          "state",
+          "draft",
+          "number",
+          "created_at",
+          "updated_at",
+          "closed_at",
+          "merged_at",
+          "url",
+          "branch"
+        ]
+      },
+      "PullRequestPaginationSchema": {
+        "type": "object",
+        "properties": {
+          "hasNextPage": {
+            "type": "boolean"
+          },
+          "hasPreviousPage": {
+            "type": "boolean"
+          }
+        },
+        "required": ["hasNextPage", "hasPreviousPage"]
+      },
+      "PullRequestPaginateSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserPullRequestSchema"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PullRequestPaginationSchema"
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "PullRequestsResponseSchema": {
+        "type": "object",
+        "properties": {
+          "github": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestPaginateSchema"
+              }
+            ]
+          },
+          "gitlab": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestPaginateSchema"
+              }
+            ]
+          }
+        },
+        "required": ["github", "gitlab"]
+      },
+      "ProjectEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "string",
-            "description": "Name of the skeleton",
-            "example": "My Skeleton"
+            "pattern": "^pjt_[0-9a-fA-F]{32}$",
+            "example": "pjt_c54b633eb12f4900b92b34e222096449"
+          },
+          "title": {
+            "type": "string",
+            "example": "My Awesome Project"
           },
           "description": {
             "type": "string",
-            "description": "Description",
-            "example": "The description of the skeleton",
-            "nullable": true
+            "nullable": true,
+            "example": "A revolutionary web application"
           },
-          "myAttribute": {
+          "repoUrl": {
             "type": "string",
-            "description": "A random attribute",
-            "example": "Any random attribute",
-            "nullable": true
-          }
-        }
-      },
-      "SocialLinkDto": {
-        "type": "object",
-        "properties": {
-          "type": {
+            "nullable": true,
+            "example": "https://github.com/username/repository"
+          },
+          "provider": {
             "type": "string",
-            "description": "Type of social link",
-            "enum": ["GITHUB", "TWITTER", "LINKEDIN", "DISCORD", "WEBSITE"],
+            "enum": ["GITHUB", "GITLAB"],
             "example": "GITHUB"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com/image.jpg"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com/logo.png"
+          },
+          "published": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the project is published and visible to public"
+          },
+          "trending": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether the project is marked as trending"
+          },
+          "githubUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://github.com/username/repository"
+          },
+          "gitlabUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://gitlab.com/username/repository"
+          },
+          "twitterUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://twitter.com/username"
+          },
+          "linkedinUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://linkedin.com/in/username"
+          },
+          "discordUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://discord.gg/server"
+          },
+          "websiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com"
+          },
+          "imagesUrls": {
+            "description": "Additional project images (max 5)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projectTechStacks": {
+            "description": "Project tech stacks (max 10)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechStackEntity"
+            }
+          },
+          "projectCategories": {
+            "description": "Project categories",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryEntity"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "repoUrl",
+          "provider",
+          "image",
+          "logoUrl",
+          "published",
+          "trending",
+          "githubUrl",
+          "gitlabUrl",
+          "twitterUrl",
+          "linkedinUrl",
+          "discordUrl",
+          "websiteUrl"
+        ]
+      },
+      "ExperienceInputSchema": {
+        "type": "object",
+        "properties": {
+          "startAt": {
+            "type": "string",
+            "description": "Start date of the experience",
+            "format": "date",
+            "example": "2023-01-15"
+          },
+          "endAt": {
+            "type": "string",
+            "description": "End date of the experience (null if current)",
+            "format": "date",
+            "example": "2023-12-31",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "description": "Title or position of the experience",
+            "example": "Senior Software Engineer"
           },
           "url": {
             "type": "string",
-            "description": "URL of the social link (must match the domain of the type). Protocol is required, must use https://. Use empty string to delete the link.",
-            "example": "https://github.com/username"
+            "description": "Optional URL related to the experience (company website, project, etc.)",
+            "example": "https://company.com",
+            "nullable": true
           }
         },
-        "required": ["type", "url"]
+        "required": ["startAt", "title"]
       },
       "UpdateUserDto": {
         "type": "object",
@@ -731,24 +3479,283 @@
             "description": "User job title",
             "example": "Senior Software Engineer"
           },
-          "socialLinks": {
-            "description": "User social links",
+          "githubUrl": {
+            "type": "object",
+            "description": "GitHub profile URL (must be from github.com and use HTTPS)",
+            "example": "https://github.com/username",
+            "nullable": true
+          },
+          "gitlabUrl": {
+            "type": "object",
+            "description": "Gitlab profile URL (must be from gitlab.com and use HTTPS)",
+            "example": "https://gitlab.com/username",
+            "nullable": true
+          },
+          "twitterUrl": {
+            "type": "object",
+            "description": "Twitter/X profile URL (must be from twitter.com or x.com and use HTTPS)",
+            "example": "https://twitter.com/username",
+            "nullable": true
+          },
+          "linkedinUrl": {
+            "type": "object",
+            "description": "LinkedIn profile URL (must be from linkedin.com and use HTTPS)",
+            "example": "https://linkedin.com/in/username",
+            "nullable": true
+          },
+          "discordUrl": {
+            "type": "object",
+            "description": "Discord server or profile URL (must be from discord.com or discord.gg and use HTTPS)",
+            "example": "https://discord.gg/server",
+            "nullable": true
+          },
+          "websiteUrl": {
+            "type": "object",
+            "description": "Personal website URL (must use HTTPS)",
+            "example": "https://example.com",
+            "nullable": true
+          },
+          "userTechStacks": {
+            "description": "Array of usertech stack IDs (public IDs starting with tst_)",
+            "example": [
+              "tst_c54b633eb12f4900b92b34e222096449",
+              "tst_d54b633eb12f4900b92b34e222096450"
+            ],
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userCategories": {
+            "description": "Array of user category IDs (public IDs starting with cat_)",
+            "example": [
+              "cat_c54b633eb12f4900b92b34e222096449",
+              "cat_d54b633eb12f4900b92b34e222096450"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "experiences": {
+            "description": "Array of user experiences with start date, end date, title and optional URL",
             "example": [
               {
-                "type": "GITHUB",
-                "url": "https://github.com/username"
+                "startAt": "2023-01-15",
+                "endAt": "2023-12-31",
+                "title": "Senior Software Engineer",
+                "url": "https://company.com"
               },
               {
-                "type": "TWITTER",
-                "url": "https://twitter.com/username"
+                "startAt": "2022-01-01",
+                "endAt": null,
+                "title": "Full Stack Developer",
+                "url": null
               }
             ],
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SocialLinkDto"
+              "$ref": "#/components/schemas/ExperienceInputSchema"
             }
           }
         }
+      },
+      "RepositoryDetailsResponse": {
+        "type": "object",
+        "properties": {}
+      },
+      "IssueResponse": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateProjectDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Project title",
+            "example": "My Awesome Project"
+          },
+          "description": {
+            "type": "string",
+            "description": "Project description",
+            "example": "A revolutionary web application"
+          },
+          "repoUrl": {
+            "type": "string",
+            "description": "Repository URL",
+            "example": "https://github.com/username/repository"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Git provider",
+            "enum": ["GITHUB", "GITLAB"],
+            "example": "GITHUB"
+          },
+          "githubUrl": {
+            "type": "string",
+            "description": "GitHub URL",
+            "example": "https://github.com/username/repository"
+          },
+          "gitlabUrl": {
+            "type": "string",
+            "description": "GitLab URL",
+            "example": "https://gitlab.com/username/repository"
+          },
+          "twitterUrl": {
+            "type": "object",
+            "description": "Twitter/X profile URL (must be from twitter.com or x.com and use HTTPS)",
+            "example": "https://twitter.com/project",
+            "nullable": true
+          },
+          "linkedinUrl": {
+            "type": "object",
+            "description": "LinkedIn profile URL (must be from linkedin.com and use HTTPS)",
+            "example": "https://linkedin.com/company/project",
+            "nullable": true
+          },
+          "discordUrl": {
+            "type": "object",
+            "description": "Discord server URL (must be from discord.com or discord.gg and use HTTPS)",
+            "example": "https://discord.gg/server",
+            "nullable": true
+          },
+          "websiteUrl": {
+            "type": "object",
+            "description": "Project website URL (must use HTTPS)",
+            "example": "https://myproject.com",
+            "nullable": true
+          },
+          "projectTechStacks": {
+            "description": "Array of project tech stack IDs (public IDs starting with tst_)",
+            "example": [
+              "tst_c54b633eb12f4900b92b34e222096449",
+              "tst_d54b633eb12f4900b92b34e222096450"
+            ],
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projectCategories": {
+            "description": "Array of project category IDs (public IDs starting with cat_)",
+            "example": [
+              "cat_c54b633eb12f4900b92b34e222096449",
+              "cat_d54b633eb12f4900b92b34e222096450"
+            ],
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["title", "repoUrl", "provider"]
+      },
+      "UpdateProjectDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Project title",
+            "example": "My Awesome Project"
+          },
+          "description": {
+            "type": "string",
+            "description": "Project description",
+            "example": "A revolutionary web application"
+          },
+          "repoUrl": {
+            "type": "string",
+            "description": "Repository URL",
+            "example": "https://github.com/username/repository"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Git provider",
+            "enum": ["GITHUB", "GITLAB"],
+            "example": "GITHUB"
+          },
+          "githubUrl": {
+            "type": "string",
+            "description": "GitHub URL",
+            "example": "https://github.com/username/repository"
+          },
+          "gitlabUrl": {
+            "type": "string",
+            "description": "GitLab URL",
+            "example": "https://gitlab.com/username/repository"
+          },
+          "twitterUrl": {
+            "type": "object",
+            "description": "Twitter/X profile URL (must be from twitter.com or x.com and use HTTPS)",
+            "example": "https://twitter.com/project",
+            "nullable": true
+          },
+          "linkedinUrl": {
+            "type": "object",
+            "description": "LinkedIn profile URL (must be from linkedin.com and use HTTPS)",
+            "example": "https://linkedin.com/company/project",
+            "nullable": true
+          },
+          "discordUrl": {
+            "type": "object",
+            "description": "Discord server URL (must be from discord.com or discord.gg and use HTTPS)",
+            "example": "https://discord.gg/server",
+            "nullable": true
+          },
+          "websiteUrl": {
+            "type": "object",
+            "description": "Project website URL (must use HTTPS)",
+            "example": "https://myproject.com",
+            "nullable": true
+          },
+          "projectTechStacks": {
+            "description": "Array of project tech stack IDs (public IDs starting with tst_)",
+            "example": [
+              "tst_c54b633eb12f4900b92b34e222096449",
+              "tst_d54b633eb12f4900b92b34e222096450"
+            ],
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "projectCategories": {
+            "description": "Array of project category IDs (public IDs starting with cat_)",
+            "example": [
+              "cat_c54b633eb12f4900b92b34e222096449",
+              "cat_d54b633eb12f4900b92b34e222096450"
+            ],
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether to publish or unpublish the project",
+            "example": true
+          }
+        }
+      },
+      "DeleteProjectImageDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Public URL of the image to delete"
+          }
+        },
+        "required": ["url"]
+      },
+      "HealthCheckResultDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }
