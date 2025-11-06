@@ -1,0 +1,235 @@
+---
+title: "Features & Code Structure"
+description: "Understand how features are organized and how to navigate the codebase"
+---
+
+## Overview
+
+The frontend is organized using a **feature-based architecture**. Each feature is a self-contained module that includes all the code needed for that functionality: components, business logic, API calls, state management, and types.
+
+## Feature Structure
+
+Every feature follows the same structure pattern:
+
+```
+src/features/[feature-name]/
+├── components/      # UI components specific to this feature
+├── views/          # Page-level components and views
+├── forms/          # Form components (React Hook Form)
+├── hooks/          # Business logic and custom hooks
+├── services/       # API calls and external integrations
+├── stores/         # Client state management (Zustand)
+├── validations/    # Zod schemas for form/data validation
+└── types/          # TypeScript type definitions
+```
+
+## Main Features
+
+### Authentication (`auth/`)
+
+Handles user authentication, login, and onboarding flow.
+
+**Key Files:**
+
+- `hooks/use-auth.hook.ts` - Main authentication logic
+- `services/auth.service.ts` - API calls for auth operations
+- `views/login.view.tsx` - Login page
+- `views/onboarding.view.tsx` - User onboarding flow
+
+**What it does:**
+
+- OAuth authentication with GitHub and GitLab
+- User session management
+- Onboarding flow for new users
+- Account linking and unlinking
+
+### Projects (`projects/`)
+
+Core feature for discovering, creating, and managing open-source projects.
+
+**Key Files:**
+
+- `hooks/use-projects.hook.ts` - Project data fetching and filtering
+- `services/project.service.ts` - Project API operations
+- `stores/project-create.store.ts` - State for project creation flow
+- `views/homepage.view.tsx` - Project discovery homepage
+- `views/project-detail.view.tsx` - Individual project page
+
+**What it does:**
+
+- Project discovery with search and filters
+- Create projects from GitHub/GitLab or from scratch
+- Edit and manage project details
+- View project issues, pull requests, and contributors
+- Project claiming functionality
+
+### Profile (`profile/`)
+
+User profile pages showing contributions, experiences, and projects.
+
+**Key Files:**
+
+- `hooks/use-profile.hook.ts` - Profile data management
+- `services/profile.service.ts` - Profile API calls
+- `components/github-graph.component.tsx` - GitHub contributions visualization
+- `views/profile.view.tsx` - Public profile page
+- `views/profile-edit.view.tsx` - Profile editing
+
+**What it does:**
+
+- Display user profiles with GitHub activity
+- Show user experiences and tech stacks
+- List user's projects and contributions
+- Edit profile information
+
+### Dashboard (`dashboard/`)
+
+User dashboard for managing projects and settings.
+
+**Key Files:**
+
+- `hooks/use-my-projects.hook.ts` - User's projects management
+- `services/my-projects.service.ts` - Dashboard API calls
+- `views/projects/my-projects.view.tsx` - User's projects list
+- `views/settings/settings.view.tsx` - User settings
+
+**What it does:**
+
+- List and manage user's projects
+- User settings and preferences
+- Project activity tracking
+
+## Shared Code (`shared/`)
+
+Reusable code used across multiple features:
+
+```
+src/shared/
+├── components/      # Shared UI components (buttons, cards, etc.)
+├── hooks/          # Shared hooks (pagination, categories, etc.)
+├── lib/            # Utility functions and configurations
+├── services/       # Shared API services
+└── types/          # Common TypeScript types
+```
+
+**Key Shared Components:**
+
+- `components/ui/` - Base UI components (shadcn/ui)
+- `components/layout/` - Layout components (Header, Footer)
+- `lib/auth-client.ts` - Better Auth client configuration
+- `lib/query-client.ts` - TanStack Query configuration
+
+## App Router (`app/`)
+
+Next.js App Router structure - handles routing and page composition:
+
+```
+src/app/
+├── (routes)/       # Route groups
+├── api/            # API routes
+├── layout.tsx      # Root layout
+└── page.tsx        # Homepage
+```
+
+**Important Routes:**
+
+- `/` - Homepage (project discovery)
+- `/projects/[projectId]` - Project detail page
+- `/projects/create` - Project creation flow
+- `/profile/[userId]` - User profile page
+- `/dashboard` - User dashboard
+- `/auth/login` - Login page
+
+## File Naming Conventions
+
+All files follow strict naming conventions to make navigation easier:
+
+| Suffix           | Purpose          | Example                     |
+| ---------------- | ---------------- | --------------------------- |
+| `.component.tsx` | UI components    | `ProjectCard.component.tsx` |
+| `.view.tsx`      | Page-level views | `ProjectsList.view.tsx`     |
+| `.form.tsx`      | Form components  | `CreateProject.form.tsx`    |
+| `.hook.ts`       | Custom hooks     | `useProjects.hook.ts`       |
+| `.service.ts`    | API services     | `project.service.ts`        |
+| `.store.ts`      | Zustand stores   | `project-create.store.ts`   |
+| `.schema.ts`     | Zod schemas      | `project.schema.ts`         |
+| `.type.ts`       | TypeScript types | `project.type.ts`           |
+
+## How to Navigate the Codebase
+
+### Finding Feature Code
+
+1. **Identify the feature** - What functionality are you looking for?
+   - Authentication → `src/features/auth/`
+   - Projects → `src/features/projects/`
+   - Profile → `src/features/profile/`
+   - Dashboard → `src/features/dashboard/`
+
+2. **Find the right file type**:
+   - UI components → `components/`
+   - Business logic → `hooks/`
+   - API calls → `services/`
+   - Forms → `forms/`
+   - Types → `types/`
+
+3. **Check shared code** - If it's used across features, look in `src/shared/`
+
+### Example: Adding a New Project Filter
+
+1. **Business logic** → `features/projects/hooks/use-projects.hook.ts`
+2. **UI component** → `features/projects/components/filter-search-bar.component.tsx`
+3. **Types** → `features/projects/types/project-filters.type.ts`
+4. **API call** → `features/projects/services/project.service.ts`
+
+### Example: Creating a New Feature
+
+1. Create directory: `src/features/my-feature/`
+2. Add subdirectories: `components/`, `hooks/`, `services/`, `types/`, etc.
+3. Follow the naming conventions
+4. Keep feature code self-contained
+5. Use `shared/` only for truly reusable code
+
+## Common Patterns
+
+### Data Fetching Pattern
+
+```typescript
+// features/projects/hooks/use-projects.hook.ts
+import { useQuery } from "@tanstack/react-query";
+import { getProjects } from "../services/project.service";
+
+export const useProjects = () => {
+  return useQuery({
+    queryKey: ["projects"],
+    queryFn: () => getProjects(),
+  });
+};
+```
+
+### Form Pattern
+
+```typescript
+// features/projects/forms/create-project.form.tsx
+export function CreateProjectForm() {
+  const form = useForm({
+    resolver: zodResolver(projectSchema),
+  });
+  // ...
+}
+```
+
+### State Management Pattern
+
+```typescript
+// features/projects/stores/project-create.store.ts
+export const useProjectCreateStore = create((set) => ({
+  step: 1,
+  setStep: (step) => set({ step }),
+}));
+```
+
+## Next Steps
+
+- [Architecture Guide](/frontend/architecture) - Deep dive into architectural decisions
+- [Development Guide](/frontend/development) - Learn how to contribute code
+- [Quick Start](/frontend/quickstart) - Set up your development environment

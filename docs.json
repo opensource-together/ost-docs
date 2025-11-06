@@ -34,11 +34,19 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["frontend/overview", "frontend/architecture"]
+            "pages": ["frontend/overview"]
           },
           {
-            "group": "Developer Guide",
-            "pages": ["frontend/quickstart", "frontend/faq"]
+            "group": "Getting Started",
+            "pages": [
+              "frontend/quickstart",
+              "frontend/features",
+              "frontend/architecture"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": ["frontend/development", "frontend/faq"]
           }
         ]
       },
@@ -62,9 +70,7 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "ai/overview"
-            ]
+            "pages": ["ai/overview"]
           },
           {
             "group": "Developer Guide",

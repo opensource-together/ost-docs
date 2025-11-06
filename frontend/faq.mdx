@@ -7,11 +7,7 @@ description: "Frequently asked questions about the OpenSource Together frontend"
 
 <AccordionGroup>
   <Accordion title="What is the frontend architecture?">
-    The frontend uses a **feature-based architecture** with Next.js 15,
-    TypeScript, and hybrid state management (TanStack Query + Zustand). Each
-    feature is an autonomous module containing components, hooks, services,
-    stores, validations, and types. Learn more in our [Architecture
-    Guide](/frontend/architecture).
+    The frontend uses a **feature-based architecture** with Next.js, React, TypeScript, and hybrid state management (TanStack Query + Zustand). Each feature is an autonomous module containing components, hooks, services, stores, validations, and types. Development uses Turbopack for fast bundling. Learn more in our [Architecture Guide](/frontend/architecture).
   </Accordion>
 
 <Accordion title="Why feature-based architecture?">
@@ -22,10 +18,16 @@ description: "Frequently asked questions about the OpenSource Together frontend"
 </Accordion>
 
   <Accordion title="What technologies are used?">
-    - **Framework**: Next.js 15 with App Router - **Language**: TypeScript -
-    **Styling**: Tailwind CSS - **State Management**: TanStack Query (server) +
-    Zustand (client) - **Forms**: React Hook Form with Zod validation - **UI
-    Components**: Radix UI primitives - **Icons**: Heroicons
+    - **Framework**: Next.js with App Router and Turbopack
+    - **Runtime**: React, TypeScript, Node.js 20+
+    - **Styling**: Tailwind CSS
+    - **State Management**: TanStack Query (server) + Zustand (client)
+    - **Authentication**: Better Auth with OAuth (GitHub & GitLab)
+    - **Forms**: React Hook Form with Zod validation
+    - **UI Components**: Radix UI primitives
+    - **Icons**: React Icons
+    - **Animations**: Motion (Framer Motion)
+    - **Deployment**: @opennextjs/cloudflare for Cloudflare Workers
   </Accordion>
 </AccordionGroup>
 
@@ -46,17 +48,20 @@ description: "Frequently asked questions about the OpenSource Together frontend"
     Use TanStack Query for all API calls:
     
     ```typescript
-    // In a hook file
+    // features/projects/hooks/use-projects.hook.ts
+    import { useQuery } from '@tanstack/react-query';
+    import { getProjects } from '../services/project.service';
+    
     export const useProjects = () => {
       return useQuery({
         queryKey: ['projects'],
-        queryFn: () => projectsService.getAll(),
+        queryFn: () => getProjects(),
         staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-    }
+      });
+    };
     ```
     
-    Never make API calls directly in components - always use business logic hooks.
+    Never make API calls directly in components. Always use business logic hooks, and let the service layer handle all API communication.
   </Accordion>
   
   <Accordion title="How do I manage client state?">
@@ -114,10 +119,15 @@ description: "Frequently asked questions about the OpenSource Together frontend"
 
 <AccordionGroup>
   <Accordion title="How do I optimize performance?">
-    - Use React.memo for expensive components - Implement proper dependency
-    arrays in useEffect - Use TanStack Query's intelligent caching - Optimize
-    bundle size with dynamic imports - Use Next.js Image component for images -
-    Implement proper error boundaries
+    - Use React.memo for expensive components
+    - Implement proper dependency arrays in useEffect
+    - Use TanStack Query's intelligent caching
+    - Optimize bundle size with dynamic imports
+    - Use Next.js Image component for images
+    - Implement proper error boundaries
+    - Leverage Server Components where possible
+    - Use Turbopack for faster development builds
+    - Implement code splitting at the route level
   </Accordion>
 
 <Accordion title="How do I handle large lists?">
@@ -127,10 +137,13 @@ description: "Frequently asked questions about the OpenSource Together frontend"
 </Accordion>
 
   <Accordion title="How do I debug performance issues?">
-    Use these tools: - **React DevTools Profiler** - Identify slow components -
-    **TanStack Query DevTools** - Monitor API calls and caching - **Next.js
-    Bundle Analyzer** - Analyze bundle size - **Lighthouse** - Performance
-    audits
+    Use these tools:
+    - **React DevTools Profiler** - Identify slow components
+    - **TanStack Query DevTools** - Monitor API calls and caching
+    - **Next.js Bundle Analyzer** - Analyze bundle size
+    - **Lighthouse** - Performance audits
+    - **Turbopack DevTools** - Monitor build performance
+    - **Network Tab** - Check API response times
   </Accordion>
 </AccordionGroup>
 
@@ -138,10 +151,12 @@ description: "Frequently asked questions about the OpenSource Together frontend"
 
 <AccordionGroup>
   <Accordion title="Common build errors">
-    - **TypeScript errors**: Run `pnpm type-check` to identify issues - **Import
-    errors**: Check import paths and file extensions - **Environment
-  variables**: Ensure `.env` is properly configured - **Dependency
-    issues**: Clear `node_modules` and reinstall with `pnpm install`
+    - **TypeScript errors**: Run `pnpm type-check` to identify issues
+    - **Import errors**: Check import paths and file extensions
+    - **Environment variables**: Ensure `.env` is properly configured in the app root
+    - **Dependency issues**: Clear `node_modules` and reinstall with `pnpm install`
+    - **Turbopack errors**: Try clearing `.next` cache and restart dev server
+    - **Node version**: Ensure Node.js 20+ is installed
   </Accordion>
 
 <Accordion title="Common runtime errors">
@@ -180,5 +195,11 @@ description: "Frequently asked questions about the OpenSource Together frontend"
   </Card>
   <Card title="Architecture Guide" icon="sitemap" href="/frontend/architecture">
     Deep dive into frontend architecture
+  </Card>
+  <Card title="Features Guide" icon="puzzle-piece" href="/frontend/features">
+    Understand feature organization
+  </Card>
+  <Card title="Development Guide" icon="code" href="/frontend/development">
+    Learn how to contribute
   </Card>
 </CardGroup>
