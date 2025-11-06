@@ -1,0 +1,339 @@
+---
+title: "Development Guide"
+description: "Practical guide for contributing to the frontend codebase"
+---
+
+## Getting Started
+
+Before contributing, make sure you've:
+
+1. Set up your development environment ([Quick Start](/frontend/quickstart))
+2. Understood the architecture ([Architecture Guide](/frontend/architecture))
+3. Familiarized yourself with the features ([Features Guide](/frontend/features))
+
+## Development Workflow
+
+### 1. Understanding the Codebase
+
+Start by exploring the feature you want to work on:
+
+```bash
+# Example: Working on projects feature
+cd src/features/projects
+ls -la  # See the structure
+```
+
+**Key questions to ask:**
+
+- What feature does this belong to?
+- Is this a new feature or modification?
+- Where should this code live?
+
+### 2. Making Changes
+
+**For UI changes:**
+
+1. Find or create component in `features/[feature]/components/`
+2. Use shared components from `shared/components/ui/` when possible
+3. Follow naming convention: `*.component.tsx`
+
+**For business logic:**
+
+1. Create or update hook in `features/[feature]/hooks/`
+2. Keep components pure - move logic to hooks
+3. Follow naming convention: `*.hook.ts`
+
+**For API integration:**
+
+1. Add service method in `features/[feature]/services/`
+2. Use the service in hooks, not directly in components
+3. Follow naming convention: `*.service.ts`
+
+### 3. State Management
+
+**When to use TanStack Query (server state):**
+
+- Data from API
+- Needs caching
+- Background synchronization
+- Example: Project list, user profile
+
+```typescript
+// ✅ Good: Server state
+const { data: projects } = useQuery({
+  queryKey: ["projects"],
+  queryFn: () => getProjects(),
+});
+```
+
+**When to use Zustand (client state):**
+
+- UI state (modals, filters, form state)
+- User preferences
+- Temporary/local state
+- Example: Project creation wizard state
+
+```typescript
+// ✅ Good: Client state
+const { step, setStep } = useProjectCreateStore();
+```
+
+**When NOT to use either:**
+
+- Derived state (use `useMemo`)
+- Component-local state (use `useState`)
+
+## Code Patterns
+
+### Creating a New Component
+
+```typescript
+// features/projects/components/project-card.component.tsx
+import { Project } from '../types/project.type';
+
+interface ProjectCardProps {
+  project: Project;
+  onSelect?: (project: Project) => void;
+}
+
+export function ProjectCard({ project, onSelect }: ProjectCardProps) {
+    const handleSelect = () => {
+        onSelect?.(project);
+    };
+    return (
+        <Card onClick={handleSelect}>
+            {/* Component implementation */}
+        </Card>
+    );
+}
+```
+
+### Creating a Custom Hook
+
+```typescript
+// features/projects/hooks/use-project-detail.hook.ts
+export function useProjectDetail(projectId: string) {
+  return useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => getProjectById(projectId),
+    enabled: !!projectId,
+  });
+}
+```
+
+### Creating a Service Method
+
+```typescript
+// features/projects/services/project.service.ts
+export const getProjects = async (): Promise<Project[]> => {
+  try {
+    const response = await fetch("/api/projects");
+    if (!response.ok) throw new Error("Failed to fetch projects");
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    throw error;
+  }
+};
+
+export const getProjectById = async (id: string): Promise<Project> => {
+  try {
+    const response = await fetch(`/api/projects/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch project");
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching project:", error);
+    throw error;
+  }
+};
+```
+
+### Form Handling
+
+```typescript
+// features/projects/forms/create-project.form.tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { projectSchema } from '../validations/project.schema';
+
+export function CreateProjectForm() {
+  const form = useForm({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
+
+  const onSubmit = async (data: ProjectFormData) => {
+    await createProject(data);
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+}
+```
+
+## Best Practices
+
+### ✅ Do's
+
+- **Keep components small and focused** - One responsibility per component
+- **Extract business logic to hooks** - Components should be mostly presentational
+- **Use TypeScript strictly** - Define types for all data structures
+- **Validate with Zod** - Use schemas for runtime validation
+- **Follow naming conventions** - Makes codebase navigation easier
+- **Write self-documenting code** - Clear variable and function names
+- **Handle errors gracefully** - Use error boundaries and proper error states
+
+### ❌ Don'ts
+
+- **Don't put business logic in components** - Move to hooks
+- **Don't mix server and client state** - Use the right tool for the job
+- **Don't duplicate code** - Extract to shared when used in multiple places
+- **Don't skip type definitions** - TypeScript is your friend
+- **Don't ignore error handling** - Always handle error cases
+- **Don't create circular dependencies** - Keep features independent
+
+## Common Tasks
+
+### Adding a New Feature
+
+1. Create feature directory: `src/features/my-feature/`
+2. Set up structure: `components/`, `hooks/`, `services/`, `types/`, etc.
+3. Create route in `src/app/my-feature/`
+4. Implement feature following patterns
+5. Add types and validations
+
+### Modifying an Existing Feature
+
+1. Identify the feature directory
+2. Find relevant files (component, hook, service)
+3. Make changes following existing patterns
+4. Update types if needed
+5. Test your changes
+
+### Adding a New API Endpoint
+
+1. Add service method in `features/[feature]/services/`
+2. Create hook to use the service
+3. Use hook in components/views
+4. Handle loading and error states
+
+### Styling Components
+
+- Use Tailwind CSS utility classes
+- Use shared components from `shared/components/ui/`
+- Follow existing design patterns
+- Use CSS variables for theming
+
+## Testing Your Changes
+
+### Manual Testing Checklist
+
+- [ ] Component renders correctly
+- [ ] All interactions work (clicks, forms, etc.)
+- [ ] Loading states display properly
+- [ ] Error states are handled
+- [ ] Responsive design works (mobile/desktop)
+- [ ] No console errors or warnings
+- [ ] TypeScript types are correct
+
+### Running Type Checks
+
+```bash
+pnpm type-check
+```
+
+### Running Linter
+
+```bash
+pnpm lint
+```
+
+### Formatting Code
+
+```bash
+pnpm format
+```
+
+## Debugging
+
+### Using DevTools
+
+**TanStack Query DevTools:**
+
+- Monitor API calls and cache
+- Check query states (loading, error, success)
+- Inspect cached data
+
+**React DevTools:**
+
+- Inspect component hierarchy
+- Check props and state
+- Profile performance
+
+**Browser DevTools:**
+
+- Network tab for API calls
+- Console for errors
+- Application tab for storage
+
+### Common Issues
+
+**TypeScript Errors:**
+
+- Run `pnpm type-check` to see all errors
+- Check type definitions in `*.type.ts` files
+- Ensure imports are correct
+
+**API Errors:**
+
+- Check network tab in DevTools
+- Verify API endpoint URLs
+- Check authentication/authorization
+
+**State Issues:**
+
+- Use DevTools to inspect state
+- Check if using correct state management (Query vs Zustand)
+- Verify state updates are happening
+
+## Code Review Guidelines
+
+Before submitting a PR:
+
+1. **Self-review** - Review your own code first
+2. **Type check** - Ensure no TypeScript errors
+3. **Lint check** - Fix all linting issues
+4. **Format code** - Run Prettier
+5. **Test thoroughly** - Manual testing of all changes
+6. **Update documentation** - If adding new features
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card
+    title="GitHub Issues"
+    icon="github"
+    href="https://github.com/opensource-together/opensource-together/issues"
+  >
+    Ask questions or report issues
+  </Card>
+  <Card
+    title="Discussions"
+    icon="comments"
+    href="https://github.com/opensource-together/opensource-together/discussions"
+  >
+    Community discussions
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+- [Features Guide](/frontend/features) - Understand feature organization
+- [Architecture Guide](/frontend/architecture) - Deep dive into architecture
+- [FAQ](/frontend/faq) - Common questions and answers

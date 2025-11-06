@@ -9,7 +9,7 @@ Before you begin, ensure you have the following installed:
 
 <CardGroup cols={2}>
   <Card title="Node.js" icon="node-js">
-    Version 18.17 or later. <a href="https://nodejs.org/">Download Node.js</a>
+    Version 20.0.0 or later. <a href="https://nodejs.org/">Download Node.js</a>
   </Card>
   <Card title="pnpm" icon="package">
     Fast, disk space efficient package manager – install with{" "}
@@ -41,11 +41,15 @@ cp .env.example .env
 ```
 
 ```bash
-# Next.js configuration
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# Backend API
+# API Configuration
 NEXT_PUBLIC_API_URL=http://localhost:4000
+INTERNAL_SERVER_API_URL=http://localhost:4000
+
+# Frontend URL
+NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
+
+# S3 Bucket for Metadata Assets
+NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET=
 ```
 
 ### 4. Start Development Server
@@ -54,7 +58,7 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 pnpm dev
 ```
 
-Your application will be available at <a href="http://localhost:3000">[http://localhost:3000](http://localhost:3000)</a>.
+The development server uses **Turbopack** (Next.js's fast bundler) for optimal performance. Your application will be available at <a href="http://localhost:3000">[http://localhost:3000](http://localhost:3000)</a>.
 
 <Success>
   <strong>Success!</strong> You should see the OpenSource Together dashboard
@@ -83,45 +87,54 @@ opensource-together/
 <AccordionGroup>
   <Accordion title="Development">
     <CodeBlock language="bash">
-{`pnpm dev        # Start development server
-pnpm build      # Build for production
-pnpm start      # Start production server
-pnpm lint       # Run ESLint
-pnpm type-check # Run TypeScript checks
-`}
+    pnpm dev              # Start development server with Turbopack
+    pnpm build            # Build for production
+    pnpm start            # Start production server
+    pnpm lint             # Run ESLint
+    pnpm type-check       # Run TypeScript checks
+    pnpm format           # Format code with Prettier
+    pnpm worker:build     # Build for Cloudflare Workers
+    pnpm worker:preview   # Preview Cloudflare Workers build
+    pnpm worker:deploy    # Deploy to Cloudflare Workers
     </CodeBlock>
+
   </Accordion>
 
   <Accordion title="Code Quality">
     <CodeBlock language="bash">
-{`pnpm format         # Format code with Prettier
-pnpm test           # Run tests
-pnpm test:watch     # Run tests in watch mode
-pnpm test:coverage  # Run tests with coverage
-`}
+    pnpm format          # Format code with Prettier
+    pnpm lint            # Run ESLint
+    pnpm type-check      # Run TypeScript type checking
     </CodeBlock>
   </Accordion>
 </AccordionGroup>
 
 ## First Steps
 
-### 1. Explore the Features
+### 1. Explore the Application
 
-Navigate through the application to understand the current features:
+Navigate through the application to understand the features:
 
-- **Dashboard**: Overview of projects and activity
-- **Projects**: Browse and search open-source projects
-- **Authentication**: GitHub OAuth integration
-- **Profile**: User settings and preferences
+- **Homepage** - Discover open-source projects
+- **Projects** - Browse, search, create, and manage projects
+- **Profile** - View user profiles with GitHub activity
+- **Dashboard** - Manage your projects and settings
+- **Authentication** - Login with GitHub or GitLab
 
-### 2. Check the Developer Tools
+### 2. Developer Tools
 
 <CardGroup cols={2}>
   <Card title="TanStack Query DevTools" icon="database">
-    Available in development mode to monitor API calls and caching
+    Monitor API calls and caching in development
   </Card>
   <Card title="React DevTools" icon="react">
-    Browser extension for debugging React components
+    Browser extension for component debugging
+  </Card>
+  <Card title="Turbopack" icon="zap">
+    Fast bundler with instant HMR
+  </Card>
+  <Card title="Next.js DevTools" icon="nextjs">
+    Built-in development tools and error overlay
   </Card>
 </CardGroup>
 
@@ -150,24 +163,20 @@ Navigate through the application to understand the current features:
 
 ## Next Steps
 
-Now that you have the frontend running, you can:
+Now that you have the frontend running:
 
 <CardGroup cols={2}>
-  <Card title="Learn Architecture" icon="sitemap" href="/frontend/architecture">
-    Understand the feature-based architecture
+  <Card title="Features Guide" icon="puzzle-piece" href="/frontend/features">
+    Understand how features are organized
   </Card>
-  <Card
-    title="Explore Components"
-    icon="puzzle-piece"
-    href="/frontend/components"
-  >
-    Learn about our UI component library
+  <Card title="Architecture" icon="sitemap" href="/frontend/architecture">
+    Learn the architectural principles
   </Card>
-  <Card title="API Integration" icon="plug" href="/frontend/api">
-    Connect to backend services
+  <Card title="Development Guide" icon="code" href="/frontend/development">
+    Start contributing to the codebase
   </Card>
-  <Card title="Contributing" icon="code-branch" href="/contributing">
-    Learn how to contribute to the project
+  <Card title="FAQ" icon="question-circle" href="/frontend/faq">
+    Common questions and answers
   </Card>
 </CardGroup>
 

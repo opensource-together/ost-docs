@@ -5,7 +5,7 @@ description: "Learn about the OpenSource Together frontend architecture and key 
 
 <img
   className="block rounded-2xl"
-  src="https://framerusercontent.com/images/QaRCLVR5JNu21BNTfBJIS7X5k0.png?width=3228&height=1764"
+  src="https://framerusercontent.com/images/XzWoyspJB87XfypgRznhYJ14lo.png?scale-down-to=4096&width=4320&height=2352"
   alt="Frontend Overview"
 />
 
@@ -16,21 +16,18 @@ The OpenSource Together frontend is a modern, scalable Next.js application built
 ## Key Features
 
 <CardGroup cols={2}>
-  <Card title="Project Discovery" icon="search" href="/frontend/projects">
+  <Card title="Project Discovery" icon="search">
     Advanced search and filtering to find relevant open-source projects
   </Card>
-  <Card title="Community Dashboard" icon="users" href="/frontend/dashboard">
+  <Card title="Community Dashboard" icon="users">
     Track project activity, contributions, and community engagement
   </Card>
-  <Card
-    title="Project Management"
-    icon="folder-plus"
-    href="/frontend/projects/create"
-  >
+  <Card title="Project Management" icon="folder-plus">
     Create and manage projects from GitHub or from scratch
   </Card>
-  <Card title="Secure Authentication" icon="shield-check" href="/frontend/auth">
-    OAuth integration with GitHub and secure user management
+  <Card title="Secure Authentication" icon="shield-check">
+    Better Auth with OAuth integration (GitHub & GitLab) and secure user
+    management
   </Card>
 </CardGroup>
 
@@ -38,20 +35,32 @@ The OpenSource Together frontend is a modern, scalable Next.js application built
 
 <AccordionGroup>
   <Accordion title="Framework & Runtime">
-    - **Next.js 15** - React framework with App Router - **React 18** - Modern
-    React with concurrent features - **TypeScript** - Type-safe development
+    - **Next.js** - React framework with App Router and Turbopack - **React** -
+    Modern React with concurrent features - **TypeScript** - Type-safe
+    development - **Node.js 20+** - Runtime environment
+  </Accordion>
+  <Accordion title="Authentication">
+    - **Better Auth** - Modern authentication library with OAuth support -
+    **GitHub & GitLab OAuth** - Social authentication providers
   </Accordion>
   <Accordion title="State Management">
     - **TanStack Query** - Server state management and caching - **Zustand** -
     Client state management - **React Hook Form** - Form state and validation
+    with **Zod** schemas
   </Accordion>
   <Accordion title="UI & Styling">
     - **Tailwind CSS** - Utility-first CSS framework - **Radix UI** - Accessible
-    component primitives - **Heroicons** - Beautiful icons
+    component primitives - **Motion** (Framer Motion) - Animation library -
+    **React Icons** - Icon library
+  </Accordion>
+  <Accordion title="Deployment & Build">
+    - **@opennextjs/cloudflare** - Cloudflare Workers deployment - **Turbopack**
+    - Fast bundler for development
   </Accordion>
   <Accordion title="Development Tools">
     - **ESLint & Prettier** - Code quality and formatting - **pnpm** - Fast,
-    disk space efficient package manager
+    disk space efficient package manager - **Turbopack** - Next-generation
+    bundler
   </Accordion>
 </AccordionGroup>
 
@@ -79,8 +88,14 @@ Ready to start developing? Follow our [Quick Start Guide](/frontend/quickstart) 
   <Card title="Quick Start" icon="rocket" href="/frontend/quickstart">
     Get up and running in minutes
   </Card>
-  <Card title="Architecture Guide" icon="sitemap" href="/frontend/architecture">
-    Deep dive into the frontend architecture
+  <Card title="Architecture" icon="sitemap" href="/frontend/architecture">
+    Understand the codebase structure
+  </Card>
+  <Card title="Features" icon="puzzle-piece" href="/frontend/features">
+    Explore the main features and code organization
+  </Card>
+  <Card title="Development Guide" icon="code" href="/frontend/development">
+    Learn how to contribute effectively
   </Card>
 </CardGroup>
 
