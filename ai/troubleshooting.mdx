@@ -1,6 +1,271 @@
+---
+title: "Troubleshooting"
+description: "Common issues, cleanup procedures, and debugging commands for OST Linker"
+---
+
 ## Common Issues
-- Missing environment variables
-- Restarting dagster to clear cache
-- Port conflicts
-- Prisma errors (migrations)
-- Database connection problems
+
+### Missing Environment Variables
+
+**Symptom:** Dagster fails to load definitions or assets crash at startup.
+
+**Solution:** Ensure all required variables are set in `.env`:
+
+```bash
+# Check which variables are missing
+grep -v '^#' .env.example | while IFS='=' read -r key _; do
+  [ -z "${!key}" ] && echo "MISSING: $key"
+done
+```
+
+Required variables: `DATABASE_URL`, `GITHUB_ACCESS_TOKEN`, `OPENROUTER_API_KEY`, `GO_SCRAPER_PATH`, `GO_FETCHER_PATH`.
+
+### dbt Manifest Not Found
+
+**Symptom:** `FileNotFoundError: Could not find manifest.json` when Dagster starts.
+
+**Solution:** The dbt manifest must be generated before Dagster can discover dbt assets. Run:
+
+```bash
+cd dbt && dbt parse
+```
+
+<Info>
+In development, `dbt_project.prepare_if_dev()` is called automatically in `definitions.py` to generate the manifest. If this fails, run `dbt parse` manually.
+</Info>
+
+### Go Binary Not Found
+
+**Symptom:** `RuntimeError: Go scraper binary not found at <path>` or similar for the fetcher.
+
+**Solution:** Compile the Go binaries and update your `.env`:
+
+```bash
+cd src/services/go/scraper && go build -o github-scraper main.go
+cd ../fetcher && go build -o ost-fetcher main.go
+```
+
+Then set the absolute paths in `.env`:
+
+```
+GO_SCRAPER_PATH=/absolute/path/to/src/services/go/scraper/github-scraper
+GO_FETCHER_PATH=/absolute/path/to/src/services/go/fetcher/ost-fetcher
+```
+
+### Database Connection Errors
+
+**Symptom:** `connection refused` or `FATAL: password authentication failed`.
+
+**Checklist:**
+1. Is PostgreSQL running? `docker compose ps`
+2. Is the port correct? Local dev uses **5433** (mapped from container's 5432)
+3. Does the `DATABASE_URL` match your Docker Compose config?
+4. Is pgvector installed? Check with `SELECT * FROM pg_extension WHERE extname = 'vector';`
+
+### Port Conflicts
+
+**Symptom:** `Address already in use` when starting Dagster or PostgreSQL.
+
+**Solution:** Check what is using the port and stop it:
+
+```bash
+# Check port 3000 (Dagster)
+lsof -i :3000
+
+# Check port 5433 (PostgreSQL)
+lsof -i :5433
+```
+
+### FastText Model Missing
+
+**Symptom:** `FileNotFoundError: FastText model not found at: models/lid.176.ftz`
+
+**Solution:** Download the model file:
+
+```bash
+mkdir -p models
+wget -O models/lid.176.ftz https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz
+```
+
+Or set `FASTTEXT_MODEL_PATH` to the correct location if the file is stored elsewhere.
+
+### Dagster Cache / Stale State
+
+**Symptom:** Assets show outdated status, schedules do not trigger, or the UI behaves unexpectedly.
+
+**Solution:** Clear Dagster's local storage:
+
+```bash
+scripts/clean_dagster.sh
+```
+
+Or manually:
+
+```bash
+rm -rf dagster_home/
+mkdir dagster_home
+```
+
+<Warning>
+Clearing Dagster storage deletes all run history, asset materializations, and schedule state. Use this as a last resort.
+</Warning>
+
+### OpenRouter API Errors
+
+**Symptom:** `RuntimeError: OpenRouter API error for <project>` or `TimeoutError: OpenRouter API hard timeout after 45s`.
+
+**Checklist:**
+1. Is `OPENROUTER_API_KEY` set and valid?
+2. Is the OpenRouter service reachable? `curl https://openrouter.ai/api/v1/models`
+3. Check your OpenRouter account for rate limits or credit balance
+4. The LLM classifier has a 45-second hard timeout per project -- transient failures are expected and logged
+
+### Prisma Schema Drift
+
+**Symptom:** dbt models fail because tables or columns do not match expectations.
+
+**Solution:** Re-apply the Prisma schema:
+
+```bash
+npx prisma db push
+```
+
+For a full reset (destructive):
+
+```bash
+npx prisma db push --force-reset
+npx ts-node prisma/seed/seed.ts
+```
+
+## Cleanup Procedures
+
+### dbt Artifacts
+
+Remove compiled SQL and cached packages:
+
+```bash
+cd dbt && dbt clean
+```
+
+### Dagster History
+
+```bash
+scripts/clean_dagster.sh
+```
+
+### Docker Resources
+
+Remove dangling images and unused volumes:
+
+```bash
+scripts/clean_docker_images.sh
+
+# Or manually
+docker compose down -v
+docker system prune -f
+```
+
+### Full Reset
+
+To start completely fresh:
+
+```bash
+# Stop everything
+docker compose down -v
+
+# Clean artifacts
+cd dbt && dbt clean && cd ..
+rm -rf dagster_home/
+
+# Rebuild
+docker compose up --build -d
+
+# Re-initialize database
+npx prisma db push
+npx ts-node prisma/seed/seed.ts
+```
+
+## Useful Debugging Commands
+
+### Dagster
+
+```bash
+# Validate definitions without starting the server
+dagster definitions validate
+
+# Check asset materializations
+dagster asset list
+
+# Run a specific job manually
+dagster job execute -j project_enrichment_job
+```
+
+### dbt
+
+```bash
+# Run a single model
+dbt run --select stg_github__project
+
+# Test a single model
+dbt test --select fct_github_project
+
+# Show compiled SQL for a model
+dbt compile --select match_user_recommendation
+
+# Preview model output (first 5 rows)
+dbt show --select int_project_contextualized --limit 5
+```
+
+### Go Services
+
+```bash
+# Test scraper
+cd src/services/go/scraper && go test ./...
+
+# Test fetcher
+cd src/services/go/fetcher && go test ./...
+
+# Run scraper manually (requires env vars)
+./github-scraper
+
+# Run fetcher manually
+./ost-fetcher --mode readme --concurrency 5 --limit 10
+```
+
+### Python
+
+```bash
+# Run all tests
+pytest
+
+# Run only unit tests
+pytest -m unit
+
+# Run with verbose output
+pytest -v --tb=short
+
+# Lint and format
+ruff check src/
+ruff format src/
+
+# Type check
+mypy src/
+```
+
+### Database
+
+```bash
+# Connect to the database
+psql "postgresql://user:pass@localhost:5433/dbname"
+
+# Check table counts
+SELECT schemaname, tablename, n_tup_ins FROM pg_stat_user_tables ORDER BY schemaname;
+
+# Check pgvector embeddings
+SELECT count(*) FROM ml.embd_github_project;
+SELECT count(*) FROM ml.embd_user;
+
+# Check recommendations
+SELECT count(*) FROM public.match_global_recommendation;
+SELECT count(*) FROM public.match_user_recommendation;
+```

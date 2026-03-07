@@ -73,9 +73,17 @@
             "pages": ["ai/overview"]
           },
           {
-            "group": "Developer Guide",
+            "group": "Architecture",
             "pages": [
               "ai/pipeline",
+              "ai/database",
+              "ai/dbt",
+              "ai/go-services"
+            ]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": [
               "ai/structure",
               "ai/installation",
               "ai/troubleshooting"

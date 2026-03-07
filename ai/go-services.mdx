@@ -1,0 +1,153 @@
+---
+title: "Go Services"
+description: "GitHub scraper and fetcher binaries used for data ingestion"
+---
+
+OST Linker uses two independent Go binaries for high-performance data ingestion from the GitHub API. Both are invoked by Dagster assets as subprocesses with a 600-second timeout.
+
+## Scraper
+
+**Location:** `src/services/go/scraper/`
+
+The scraper searches the GitHub Search API for open-source projects matching specific criteria and upserts the raw JSON data into `github.raw_github_project`.
+
+### How It Works
+
+1. Reads search queries from the `GITHUB_SCRAPING_QUERIES` environment variable (JSON array)
+2. Launches one goroutine per query for parallel scraping
+3. Each query paginates through results (100 per page, up to 1,000 per query)
+4. Results are batch-upserted into PostgreSQL using `pgx.Batch`
+5. Outputs a JSON summary to stdout (parsed by the Dagster asset)
+
+### Search Queries
+
+Queries are built dynamically by `PipelineConfig` in Python and cover 3 star ranges:
+
+| Range | Stars |
+|-------|-------|
+| Range 1 | 300 -- 1,000 |
+| Range 2 | 1,000 -- 3,000 |
+| Range 3 | 3,000 -- 5,000 |
+
+Each query includes these filters:
+- `good-first-issues:>1` -- at least one good first issue
+- `help-wanted-issues:>0` -- at least one help wanted issue
+- `topics:>2` -- at least 2 topics defined
+- `fork:false` -- exclude forks
+- `pushed:>=<7 days ago>` -- active in the last week
+- `is:public archived:false` -- public and not archived
+- Excludes terms: `awesome`, `roadmap`, `cheatsheet`, `interview`
+
+### Rate Limiting
+
+The scraper uses a shared `searchRateLimiter` across all goroutines that tracks GitHub's `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers.
+
+| Parameter | Value |
+|-----------|-------|
+| Initial budget | 30 requests (GitHub Search API limit per minute for authenticated users) |
+| Rate limit handling | Sleeps until reset time + 1 second |
+| 403 response handling | Reads `Retry-After` header, falls back to 60 seconds |
+| Retry policy | 3 attempts with exponential backoff (2s, 4s) |
+| HTTP timeout | 30 seconds per request |
+| Global timeout | 8 minutes for all queries |
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GITHUB_SCRAPING_QUERIES` | Yes (or `GITHUB_SCRAPING_QUERY`) | JSON array of search queries |
+| `GITHUB_ACCESS_TOKEN` | Recommended | GitHub API token (unauthenticated requests have lower limits) |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `GITHUB_API_URL` | No | Override API endpoint (default: `https://api.github.com/search/repositories`) |
+
+### Output
+
+The scraper writes a JSON summary to stdout:
+
+```json
+{
+  "queries": [
+    {"query": "stars:300..1000 ...", "collected_count": 450, "upserted_count": 448, "failed_upserts": 2}
+  ],
+  "total_collected": 1200,
+  "total_upserted": 1195,
+  "total_failed": 5,
+  "status": "partial",
+  "duration_seconds": 45.2
+}
+```
+
+## Fetcher
+
+**Location:** `src/services/go/fetcher/`
+
+The fetcher enriches scraped projects by fetching additional data from the GitHub REST API. It operates in 3 modes, each targeting a different API endpoint and database table.
+
+### Modes
+
+| Mode | API Endpoint | Output Table | Description |
+|------|-------------|-------------|-------------|
+| `readme` | `GET /repos/{owner}/{repo}/readme` | `github.raw_github_readme` | Fetches raw README content |
+| `languages` | `GET /repos/{owner}/{repo}/languages` | `github.raw_github_languages` | Fetches language byte counts |
+| `topics` | `GET /repos/{owner}/{repo}/topics` | `github.raw_github_topics` | Fetches repository topics |
+
+### CLI Flags
+
+```bash
+ost-fetcher --mode readme --concurrency 20 --limit 100
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--mode` | (required) | One of: `readme`, `languages`, `topics` |
+| `--concurrency` | 10 | Number of concurrent worker goroutines |
+| `--limit` | 0 (no limit) | Maximum number of projects to process |
+
+### Incremental Fetching
+
+The fetcher only processes projects that do not already have data in the target table. It queries `github.int_github_detection` (the output of FastText language filtering) and LEFT JOINs against the target table to find new projects.
+
+### Rate Limiting and Retries
+
+| Parameter | Value |
+|-----------|-------|
+| Initial budget | 5,000 requests (GitHub REST API limit per hour for authenticated users) |
+| Rate limit tracking | Reads `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers |
+| Retry policy | Up to 3 attempts with exponential backoff (1s, 2s, 3s) |
+| 403 handling | Reads `Retry-After` header, falls back to 60-second sleep |
+| 404/422 handling | No retry, returns empty result |
+| HTTP timeout | 30 seconds per request |
+| Global timeout | 30 minutes |
+| Response body limit | 10 MB per response |
+
+### README Truncation
+
+README content is truncated to 50,000 bytes (preserving valid UTF-8 boundaries) before insertion into the database.
+
+<Info>
+The `truncateUTF8` function ensures multi-byte characters are never split, preventing invalid UTF-8 sequences in the database.
+</Info>
+
+### Batch Upserts
+
+Results are collected via channels and flushed in batches of 100 using `pgx.Batch` for efficient database writes. Each batch uses `ON CONFLICT ... DO UPDATE` to handle re-runs gracefully.
+
+## Dagster Integration
+
+Both Go binaries are invoked by Dagster Python assets using `subprocess.run()`:
+
+```python
+result = subprocess.run(
+    [binary_path],          # or [binary_path, "--mode", "readme", "--concurrency", "20"]
+    capture_output=True,
+    text=True,
+    env=env,                # DATABASE_URL, GITHUB_ACCESS_TOKEN, queries
+    timeout=600,            # 10 minutes
+)
+```
+
+The environment is constructed by `build_scraper_env()` and `build_fetcher_env()` helpers in `cfg_resource.py`, which read values from the `PipelineConfig` resource.
+
+<Warning>
+If the Go binary is not found at the configured path, the asset will raise a `RuntimeError` with a clear message. Make sure `GO_SCRAPER_PATH` and `GO_FETCHER_PATH` point to compiled binaries.
+</Warning>
