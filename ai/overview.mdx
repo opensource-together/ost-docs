@@ -5,111 +5,50 @@ description: "High-level architecture of the OST Linker AI recommendation engine
 
 ## What is OST Linker?
 
-OST Linker is the AI-powered recommendation engine behind [OpenSourceTogether](https://opensource-together.com/). It continuously scrapes GitHub for open-source projects, classifies them using LLMs, computes semantic embeddings, and surfaces personalized recommendations to users via cosine similarity with pgvector.
+OST Linker is the AI-powered recommendation engine for [OpenSourceTogether](https://opensource-together.com/). It scrapes GitHub for open-source projects, classifies them via LLM, computes embeddings, and surfaces personalized recommendations using pgvector cosine similarity.
 
-<Info>
-OST Linker runs as a fully automated pipeline orchestrated by **Dagster**. Once deployed, it requires no manual intervention -- projects are discovered, enriched, classified, and recommended on schedule.
-</Info>
-
-## Data Flow
-
-The pipeline follows a linear progression through 5 stages:
-
-```mermaid
-graph LR
-    A[Ingestion] --> B[Classification]
-    B --> C[Sync]
-    C --> D[Project ML]
-    D --> E[User ML]
-
-    style A fill:#2d6a4f,color:#fff
-    style B fill:#40916c,color:#fff
-    style C fill:#52b788,color:#fff
-    style D fill:#74c69d,color:#000
-    style E fill:#95d5b2,color:#000
-```
-
-### Detailed Pipeline
-
-```mermaid
-graph TD
-    subgraph Ingestion
-        GH[GitHub Search API] -->|Go scraper| RAW[raw_github_project]
-        RAW -->|dbt staging| STG[stg_github__project]
-        STG -->|FastText| DET[int_github_detection]
-        DET -->|Go fetcher| README[raw_github_readme]
-        DET -->|Go fetcher| LANG[raw_github_languages]
-        DET -->|Go fetcher| TOPICS[raw_github_topics]
-        README & LANG & TOPICS -->|dbt| FCT[fct_github_project]
-    end
-
-    subgraph Classification
-        FCT --> LLM[LLM Classifier]
-        LLM -->|Category + Domain| CLASS[project_classification]
-    end
-
-    subgraph Sync
-        CLASS --> SYNC[public.Project]
-    end
-
-    subgraph Project ML
-        SYNC -->|dbt| CTX[int_project_contextualized]
-        CTX -->|dbt| CAND[int_project_embedding_candidate]
-        CAND -->|SentenceTransformer| PEMB[embd_github_project]
-        PEMB -->|dbt| GREC[match_global_recommendation]
-    end
-
-    subgraph User ML
-        USR[public.User] -->|dbt| UENR[int_user_enriched]
-        UENR -->|SentenceTransformer| UEMB[embd_user]
-        UEMB -->|dbt| UREC[match_user_recommendation]
-    end
-```
-
-## Pipeline Stages
-
-| Stage | Purpose | Key Technology |
-|-------|---------|----------------|
-| **Ingestion** | Scrape GitHub, detect languages, fetch READMEs/topics/languages | Go binaries, FastText, dbt |
-| **Classification** | Assign Category and Domain to each project via LLM | Mistral Small 3.2 via OpenRouter |
-| **Sync** | Write enriched project data to the public-facing `Project` table | Python, PostgreSQL |
-| **Project ML** | Build project context strings, compute 384-dim embeddings, generate global recommendations | dbt, SentenceTransformer (MiniLM-L6-v2) |
-| **User ML** | Build user context strings, compute user embeddings, generate personalized recommendations | dbt, SentenceTransformer, pgvector cosine similarity |
+The pipeline is fully automated and orchestrated by **Dagster**.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Orchestration** | Dagster (assets, jobs, schedules, sensors) |
-| **Data transformation** | dbt (staging, intermediate, marts) |
-| **Ingestion services** | Go 1.24 (scraper + fetcher binaries) |
-| **ML / Classification** | Python 3.11, SentenceTransformer, FastText, OpenRouter (Mistral) |
-| **Database** | PostgreSQL + pgvector (384-dim vectors, cosine similarity) |
-| **Schema management** | Prisma (4 schemas: `public`, `github`, `ml`, `match`) |
-| **Containerization** | Docker (3-stage build: Go builder, Python builder, runtime) |
-| **CI/CD** | GitHub Actions (quality checks, Docker publish, submodule sync) |
+- **Orchestration:** Dagster (assets, jobs, schedules, sensors)
+- **Data transformation:** dbt (staging, intermediate, marts)
+- **Ingestion:** Go 1.24 (scraper + fetcher binaries)
+- **ML / Classification:** Python 3.11, SentenceTransformer (MiniLM-L6-v2), FastText, OpenRouter (Mistral)
+- **Database:** PostgreSQL + pgvector (384-dim vectors, cosine similarity)
+- **Schema management:** Prisma (4 schemas: `public`, `github`, `ml`, `match`)
+- **Containerization:** Docker (3-stage build)
+- **CI/CD:** GitHub Actions
+
+## Pipeline Stages
+
+1. **Ingestion** -- Go binaries scrape GitHub, FastText filters languages, dbt stages the data
+2. **Classification** -- LLM (Mistral Small 3.2) assigns Category and Domain to each project
+3. **Sync** -- Enriched data is written to the public-facing `Project` table
+4. **Project ML** -- dbt builds context strings, SentenceTransformer computes embeddings, global recommendations are generated
+5. **User ML** -- Same flow for users, producing personalized recommendations via hybrid scoring
 
 ## Key Design Decisions
 
-1. **Go for ingestion** -- High-performance concurrent HTTP requests with goroutines and rate limiting, compiled to static binaries invoked by Dagster via `subprocess.run()`
-2. **dbt for transformations** -- SQL-first data modeling with contracts, tests, and documentation baked in
-3. **Hybrid recommendation scoring** -- Combines semantic similarity (40%), user preference overlap (35%), project freshness (15%), and popularity (10%)
-4. **pgvector for similarity search** -- Native PostgreSQL extension for cosine similarity on 384-dimensional embeddings, no external vector DB required
-5. **Prisma as schema source of truth** -- Single schema definition shared between the backend (Node.js) and the AI engine
+- **Go for ingestion** -- concurrent HTTP with goroutines, compiled to static binaries called by Dagster
+- **dbt for transformations** -- SQL-first modeling with contracts and tests
+- **Hybrid scoring** -- similarity (40%) + preference overlap (35%) + freshness (15%) + popularity (10%)
+- **pgvector** -- native PostgreSQL extension, no external vector DB needed
+- **Prisma** -- single schema definition shared with the backend
 
 ## Getting Started
 
 <CardGroup cols={2}>
   <Card title="Pipeline Deep-Dive" icon="diagram-project" href="/ai/pipeline">
-    Understand every asset, job, and schedule in detail
+    Assets, jobs, schedules, and resources
   </Card>
   <Card title="Installation" icon="wrench" href="/ai/installation">
-    Set up the development environment from scratch
+    Set up the development environment
   </Card>
   <Card title="Database Schema" icon="database" href="/ai/database">
-    Explore the 4 PostgreSQL schemas and pgvector setup
+    PostgreSQL schemas and pgvector setup
   </Card>
   <Card title="Project Structure" icon="folder-tree" href="/ai/structure">
-    Navigate the codebase directory layout
+    Codebase directory layout
   </Card>
 </CardGroup>

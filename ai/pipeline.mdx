@@ -1,164 +1,55 @@
 ---
 title: "Pipeline Deep-Dive"
-description: "Complete reference for Dagster assets, jobs, schedules, and resources"
+description: "Dagster assets, jobs, schedules, and resources reference"
 ---
 
-## Asset Groups
+## Assets
 
-OST Linker organizes its Dagster assets into 5 groups that execute in sequence. Each group contains both Python assets and dbt models.
+| Asset | Type | Group |
+|-------|------|-------|
+| `raw_github__extract_projects` | Python (Go subprocess) | ingestion |
+| `stg_github__project` | dbt | ingestion |
+| `core_github__detect_languages` | Python (FastText) | ingestion |
+| `core_github__fetch_readme` | Python (Go subprocess) | ingestion |
+| `core_github__fetch_repo_languages` | Python (Go subprocess) | ingestion |
+| `core_github__fetch_repo_topics` | Python (Go subprocess) | ingestion |
+| `stg_github__readme`, `stg_github__languages`, `stg_github__topics`, `stg_github__detection` | dbt | ingestion |
+| `int_project_enriched` | dbt | ingestion |
+| `fct_github_project` | dbt | ingestion |
+| `core_match__classify_projects` | Python (LLM) | classification |
+| `core_public__sync_projects` | Python | sync |
+| `stg_public__project` | dbt | project_ml |
+| `int_project_contextualized` | dbt | project_ml |
+| `int_project_embedding_candidate` | dbt | project_ml |
+| `core_ml__embed_projects` | Python | project_ml |
+| `match_global_recommendation` | dbt | project_ml |
+| `stg_public__user` | dbt | user_ml |
+| `int_user_enriched` | dbt | user_ml |
+| `fct_public_user` | dbt | user_ml |
+| `core_ml__embed_users` | Python | user_ml |
+| `match_user_recommendation` | dbt | user_ml |
 
-### Ingestion
+## Jobs and Schedules
 
-The ingestion group collects raw data from GitHub and transforms it through staging and enrichment layers.
-
-| Asset | Type | Description |
-|-------|------|-------------|
-| `raw_github__extract_projects` | Python (Go subprocess) | Runs the Go scraper to search GitHub and upsert raw project data |
-| `stg_github__project` | dbt | Cleans and flattens raw JSON into typed columns |
-| `core_github__detect_languages` | Python | Filters non-English repos using FastText language detection |
-| `core_github__fetch_readme` | Python (Go subprocess) | Fetches README content for detected projects |
-| `core_github__fetch_repo_languages` | Python (Go subprocess) | Fetches repository language breakdowns |
-| `core_github__fetch_repo_topics` | Python (Go subprocess) | Fetches repository topics |
-| `stg_github__readme`, `stg_github__languages`, `stg_github__topics`, `stg_github__detection` | dbt | Staging models for fetched data |
-| `int_project_enriched` | dbt | Joins all staging sources into a single enriched project view |
-| `fct_github_project` | dbt | Final fact table with stars, forks, pushed_at, and all metadata |
-
-### Classification
-
-| Asset | Type | Description |
-|-------|------|-------------|
-| `core_match__classify_projects` | Python | Sends project context to Mistral Small 3.2 (via OpenRouter) to assign a Category and Domain |
-
-The LLM receives a truncated context (max 8,000 chars) containing the project title, description, topics, and README. It returns a JSON object with `category` and `domain` fields matched against the valid labels from the database.
-
-### Sync
-
-| Asset | Type | Description |
-|-------|------|-------------|
-| `core_public__sync_projects` | Python | Syncs enriched and classified project data into the `public.Project` table |
-
-### Project ML
-
-| Asset | Type | Description |
-|-------|------|-------------|
-| `stg_public__project` | dbt | Stages public project data for ML processing |
-| `int_project_contextualized` | dbt | Builds rich context strings from project metadata using the `build_project_context` macro |
-| `int_project_embedding_candidate` | dbt | Selects projects ready for embedding (non-null context) |
-| `core_ml__embed_projects` | Python | Computes 384-dim embeddings with SentenceTransformer and upserts to `ml.embd_github_project` |
-| `match_global_recommendation` | dbt | Top-N global recommendations ranked by recency and stars |
-
-### User ML
-
-| Asset | Type | Description |
-|-------|------|-------------|
-| `stg_public__user` | dbt | Stages user data for ML processing |
-| `int_user_enriched` | dbt | Builds user context strings using the `build_user_context` macro |
-| `fct_public_user` | dbt | Final user fact table |
-| `core_ml__embed_users` | Python | Computes 384-dim user embeddings and upserts to `ml.embd_user` |
-| `match_user_recommendation` | dbt | Personalized recommendations using hybrid scoring |
-
-## Data Flow
-
-The full asset dependency graph follows this order:
-
-```mermaid
-graph TD
-    A[raw_github_project] --> B[stg_github__project]
-    B --> C[core_github__detect_languages]
-    C --> D1[core_github__fetch_readme]
-    C --> D2[core_github__fetch_repo_languages]
-    C --> D3[core_github__fetch_repo_topics]
-    D1 --> E1[stg_github__readme]
-    D2 --> E2[stg_github__languages]
-    D3 --> E3[stg_github__topics]
-    B --> F[int_project_enriched]
-    E1 & E2 & E3 --> F
-    F --> G[fct_github_project]
-    G --> H[core_match__classify_projects]
-    H --> I[core_public__sync_projects]
-    I --> J[stg_public__project]
-    J --> K[int_project_contextualized]
-    K --> L[int_project_embedding_candidate]
-    L --> M[core_ml__embed_projects]
-    M --> N[match_global_recommendation]
-```
-
-## Jobs
-
-| Job | Groups | Description | Retry Policy |
-|-----|--------|-------------|-------------|
-| `project_enrichment_job` | ingestion, classification, sync, project_ml | Full project pipeline from scraping to recommendations | 2 retries, exponential backoff, full jitter |
-| `user_recommendation_job` | user_ml | User embedding and recommendation refresh | Default |
-| `run_all_job` | All groups | Manual-only job for initial setup or recovery | Default |
-| `cleanup_dagster_history_job` | N/A | Cleans up old Dagster run history | Default |
+| Job | Schedule | Groups |
+|-----|----------|--------|
+| `project_enrichment_job` | Daily at 3 AM (Europe/Paris) | ingestion, classification, sync, project_ml |
+| `user_recommendation_job` | Every 10 min | user_ml |
+| `run_all_job` | Manual only | All groups |
+| `cleanup_dagster_history_job` | Every 2 days at 11 PM | Housekeeping |
 
 <Info>
-The `project_enrichment_job` is tagged with `dagster/max_concurrent_runs: 1` to prevent overlapping runs.
+`project_enrichment_job` is limited to 1 concurrent run with 2 retries and exponential backoff.
 </Info>
-
-## Schedules
-
-| Schedule | Job | Cron | Timezone | Status |
-|----------|-----|------|----------|--------|
-| `project_enrichment_schedule` | `project_enrichment_job` | `0 3 * * *` (daily at 3 AM) | Europe/Paris | Running |
-| `user_recommendation_schedule` | `user_recommendation_job` | `*/10 * * * *` (every 10 min) | Europe/Paris | Running |
-| `cleanup_dagster_history_schedule` | `cleanup_dagster_history_job` | `0 23 */2 * *` (every 2 days at 11 PM) | Europe/Paris | Running |
 
 ## Resources
 
-All resources are configured in `src/linker/definitions.py` and injected into assets via `required_resource_keys`.
-
-### PipelineConfig
-
-Central configuration resource that reads environment variables at runtime.
-
-| Field | Source | Description |
-|-------|--------|-------------|
-| `db_url` | `DATABASE_URL` | PostgreSQL connection string |
-| `github_token` | `GITHUB_ACCESS_TOKEN` | GitHub API token for scraping |
-| `go_scraper_path` | `GO_SCRAPER_PATH` | Path to compiled Go scraper binary |
-| `go_fetcher_path` | `GO_FETCHER_PATH` | Path to compiled Go fetcher binary |
-| `github_api_url` | Hardcoded | `https://api.github.com/search/repositories` |
-
-The config resource also builds GitHub search queries dynamically. Queries target 3 star ranges (300-1000, 1000-3000, 3000-5000) with filters for good first issues, recent activity, and excluded terms (awesome, roadmap, cheatsheet, interview).
-
-### LLMClassifierResource
-
-| Property | Value |
-|----------|-------|
-| Provider | OpenRouter (`https://openrouter.ai/api/v1`) |
-| Model | `mistralai/mistral-small-3.2-24b-instruct` |
-| Temperature | 0.0 |
-| Response format | JSON object |
-| Timeout | 45s hard timeout (thread-based) |
-| Context truncation | 8,000 characters |
-
-### SentenceTransformerResource
-
-| Property | Value |
-|----------|-------|
-| Model | `sentence-transformers/all-MiniLM-L6-v2` |
-| Embedding dimension | 384 |
-| Device | CPU (configurable) |
-| Normalization | Enabled (for cosine similarity) |
-
-Supports both single text encoding (`encode`) and batch encoding (`encode_batch`).
-
-### FastTextModelResource
-
-| Property | Value |
-|----------|-------|
-| Model file | `models/lid.176.ftz` |
-| Purpose | Language detection on project text (name, description, README) |
-| Loading | Lazy-loaded singleton, reused across all runs |
-
-### PandasPostgresIOManager
-
-Custom IO manager that transfers DataFrames between assets via PostgreSQL. Uses a schema/table allowlist to prevent SQL injection. Supports truncate-then-append writes and full table reads.
-
-### Other Resources
-
-| Resource | Type | Purpose |
-|----------|------|---------|
-| `dbt` | `DbtCliResource` | Runs dbt CLI commands from Dagster |
-| `fs_io_manager` | `FilesystemIOManager` | Default file-based IO for non-DB assets |
+| Resource | Purpose |
+|----------|---------|
+| `PipelineConfig` | Reads env vars (`DATABASE_URL`, `GITHUB_ACCESS_TOKEN`, Go binary paths), builds search queries |
+| `LLMClassifierResource` | OpenRouter API, Mistral Small 3.2, temp 0.0, 45s timeout, 8K char context |
+| `SentenceTransformerResource` | `all-MiniLM-L6-v2`, 384-dim embeddings, CPU, normalized |
+| `FastTextModelResource` | `lid.176.ftz` for language detection, lazy-loaded singleton |
+| `PandasPostgresIOManager` | DataFrame transfers between assets via PostgreSQL |
+| `DbtCliResource` | Runs dbt CLI commands from Dagster |
+| `FilesystemIOManager` | Default file-based IO for non-DB assets |

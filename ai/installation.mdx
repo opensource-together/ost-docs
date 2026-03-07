@@ -1,174 +1,92 @@
 ---
 title: "Installation & Setup"
-description: "Prerequisites, environment configuration, and development setup for OST Linker"
+description: "Get OST Linker running locally"
 ---
 
-## Prerequisites
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| Docker | Latest | Container runtime for all services |
-| Go | 1.24+ | Compile scraper and fetcher binaries |
-| Python | 3.11 | Dagster, dbt, ML models |
-| Node.js | 18+ | Prisma CLI for schema management and seeding |
-| uv | Latest | Python dependency management (replaces pip/poetry) |
-
-## Quick Start with Docker
-
-The fastest way to get OST Linker running:
+## Quick Start (Docker)
 
 ```bash
-# 1. Clone and configure
 git clone https://github.com/opensource-together/ost-linker.git
 cd ost-linker
 cp .env.example .env
-# Edit .env with your values (see Environment Variables below)
-
-# 2. Launch all services
+# Edit .env with your values (see below)
 docker compose up --build -d
 ```
 
-This starts the Dagster webserver (port 3000), daemon, and a PostgreSQL database with pgvector (port 5433).
-
-<Tip>
-The Dagster UI is available at [http://localhost:3000](http://localhost:3000) once the containers are running.
-</Tip>
+Dagster UI will be at `http://localhost:3000`.
 
 ## Environment Variables
-
-All configuration is driven by environment variables. Copy `.env.example` to `.env` and fill in the required values.
 
 ### Required
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (e.g., `postgresql://user:pass@localhost:5433/dbname`) |
-| `GITHUB_ACCESS_TOKEN` | GitHub fine-grained personal access token for API access |
-| `OPENROUTER_API_KEY` | API key for OpenRouter (LLM classification) |
-| `GO_SCRAPER_PATH` | Absolute path to the compiled Go scraper binary |
-| `GO_FETCHER_PATH` | Absolute path to the compiled Go fetcher binary |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `GITHUB_ACCESS_TOKEN` | GitHub fine-grained personal access token |
+| `OPENROUTER_API_KEY` | API key for LLM classification |
+| `GO_SCRAPER_PATH` | Path to compiled Go scraper binary |
+| `GO_FETCHER_PATH` | Path to compiled Go fetcher binary |
 
 ### Optional
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FASTTEXT_MODEL_PATH` | `models/lid.176.ftz` | Path to FastText language detection model |
-| `DBT_TARGET` | `local` | dbt profile target (`local` for port 5433, `docker` for port 5432) |
-| `DBT_PROJECT_DIR` | `<repo>/dbt` | dbt project directory (set to `/app/dbt` in Docker) |
-| `DAGSTER_HOME` | `./dagster_home` | Dagster metadata and run storage directory |
+| Variable | Default |
+|----------|---------|
+| `FASTTEXT_MODEL_PATH` | `models/lid.176.ftz` |
+| `DBT_TARGET` | `local` (port 5433) |
+| `DBT_PROJECT_DIR` | `./dbt` |
+| `DAGSTER_HOME` | `./dagster_home` |
 
 <Warning>
-Never commit `.env` or hardcode secrets in code. The `.env` file is gitignored by default.
+Never commit `.env` or hardcode secrets. The file is gitignored.
 </Warning>
 
 ## Local Development Setup
 
-For development outside of Docker, follow these steps in order.
-
-### 1. Install Python Dependencies
+### 1. Python dependencies
 
 ```bash
 uv sync
 ```
 
-### 2. Compile Go Binaries
-
-```bash
-cd src/services/go/scraper && go build -o github-scraper main.go
-cd ../fetcher && go build -o ost-fetcher main.go
-```
-
-Or use the convenience script:
+### 2. Compile Go binaries
 
 ```bash
 scripts/go_binary_gen.sh
 ```
 
-Then set `GO_SCRAPER_PATH` and `GO_FETCHER_PATH` in your `.env` to the absolute paths of the compiled binaries.
+Then set `GO_SCRAPER_PATH` and `GO_FETCHER_PATH` in `.env` to the absolute paths.
 
-### 3. Download FastText Model
-
-The language detection model (`lid.176.ftz`) is not included in the repo due to its size. Download it:
+### 3. Download FastText model
 
 ```bash
 mkdir -p models
 wget -O models/lid.176.ftz https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz
 ```
 
-### 4. Start the Database
-
-If not using Docker Compose for the full stack, start just the database:
+### 4. Start the database
 
 ```bash
 docker compose up db -d
 ```
 
-This starts PostgreSQL with pgvector on port 5433.
-
-### 5. Initialize the Database
-
-Apply the Prisma schema and seed reference data:
+### 5. Initialize the database
 
 ```bash
 npx prisma db push
 npx ts-node prisma/seed/seed.ts
 ```
 
-<Info>
-`prisma db push` applies the schema without creating migration files. For production, use `prisma migrate deploy`.
-</Info>
-
-### 6. Install dbt Dependencies
+### 6. Install dbt deps and run Dagster
 
 ```bash
-cd dbt && dbt deps
-```
-
-### 7. Run Dagster Locally
-
-```bash
+cd dbt && dbt deps && cd ..
 dagster dev -h 0.0.0.0 -p 3000
 ```
 
-The Dagster UI will be available at `http://localhost:3000`.
-
-## Docker Build Details
-
-The Dockerfile uses a 3-stage build:
-
-| Stage | Base Image | Purpose |
-|-------|-----------|---------|
-| Go Builder | `golang:1.24-alpine` | Compiles both Go binaries to `/app/bin/` |
-| Python Builder | `python:3.11-slim` | Exports dependencies via `uv export` to `requirements.txt` |
-| Runtime | `python:3.11-slim` | Installs deps, copies Go binaries to `/usr/local/bin/`, runs Dagster |
-
-### Compose Services
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `webserver` | 3000 | Dagster webserver (UI + GraphQL API) |
-| `daemon` | -- | Dagster daemon (schedules, sensors, run monitoring) |
-| `db` (dev only) | 5433 | PostgreSQL with pgvector (`ankane/pgvector:v0.4.1`) |
-
-<Tip>
-The `db` service is defined in `docker-compose.override.yml` and only runs in local development. In production, use an external managed PostgreSQL instance.
-</Tip>
-
-## Verifying the Setup
-
-After completing the setup, verify everything is working:
+## Verify Setup
 
 ```bash
-# Check Python deps and Dagster module
 dagster definitions validate
-
-# Run dbt models
-cd dbt && dbt build
-
-# Run tests
+cd dbt && dbt build && cd ..
 pytest
-
-# Check Go binaries
-src/services/go/scraper/github-scraper --help
-src/services/go/fetcher/ost-fetcher --help
 ```
