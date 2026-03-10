@@ -66,16 +66,25 @@
       },
 
       {
-        "tab": "AI Engine",
+        "tab": "Linker",
         "groups": [
           {
             "group": "Overview",
             "pages": ["ai/overview"]
           },
           {
-            "group": "Developer Guide",
+            "group": "Architecture",
             "pages": [
               "ai/pipeline",
+              "ai/database",
+              "ai/dbt",
+              "ai/go-services",
+              "ai/rest-api"
+            ]
+          },
+          {
+            "group": "Developer Guide",
+            "pages": [
               "ai/structure",
               "ai/installation",
               "ai/troubleshooting"

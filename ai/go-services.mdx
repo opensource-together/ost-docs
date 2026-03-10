@@ -1,0 +1,55 @@
+---
+title: "Go Services"
+description: "GitHub scraper and fetcher binaries for data ingestion"
+---
+
+## Overview
+
+Two independent Go binaries handle GitHub data ingestion. Both are called by Dagster assets via `subprocess.run()` with a 600-second timeout.
+
+## Scraper
+
+**Location:** `src/services/go/scraper/`
+
+Searches the GitHub Search API for open-source projects and upserts results into `github.raw_github_project`.
+
+- Reads queries from `GITHUB_SCRAPING_QUERIES` env var (JSON array)
+- One goroutine per query, paginating up to 1,000 results each
+- Batch upserts via `pgx.Batch`
+- Outputs JSON summary to stdout (parsed by Dagster)
+
+**Search filters:** stars 300-5000, good first issues, recent pushes, public, not archived, not forks. Excludes awesome lists, roadmaps, cheatsheets, interview repos.
+
+**Rate limiting:** 30 req/min budget, tracks `X-RateLimit-*` headers, 3 retries with exponential backoff.
+
+## Fetcher
+
+**Location:** `src/services/go/fetcher/`
+
+Enriches scraped projects by fetching additional data. Operates in 3 modes:
+
+| Mode | Endpoint | Output Table |
+|------|----------|-------------|
+| `readme` | `GET /repos/owner/repo/readme` | `github.raw_github_readme` |
+| `languages` | `GET /repos/owner/repo/languages` | `github.raw_github_languages` |
+| `topics` | `GET /repos/owner/repo/topics` | `github.raw_github_topics` |
+
+### CLI Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--mode` | (required) | `readme`, `languages`, or `topics` |
+| `--concurrency` | 10 | Number of concurrent workers |
+| `--limit` | 0 (unlimited) | Max projects to process |
+
+**Incremental:** only fetches projects missing data in the target table.
+
+**Rate limiting:** 5,000 req/hour budget, 3 retries, 30-min global timeout. READMEs truncated to 50KB.
+
+## Dagster Integration
+
+Both binaries are invoked via `subprocess.run()`. Environment is built by `build_scraper_env()` / `build_fetcher_env()` helpers in `cfg_resource.py`.
+
+<Warning>
+If the Go binary is not found at the configured path, the asset raises a `RuntimeError`. Make sure `GO_SCRAPER_PATH` and `GO_FETCHER_PATH` point to compiled binaries.
+</Warning>

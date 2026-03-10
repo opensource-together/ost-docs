@@ -1,0 +1,68 @@
+---
+title: "dbt Layer"
+description: "Data transformation models, macros, and recommendation scoring"
+---
+
+## Models
+
+All models are materialized as tables and routed to PostgreSQL schemas via `generate_schema_name`.
+
+| Model | Layer | Schema | Description |
+|-------|-------|--------|-------------|
+| `stg_github__project` | staging | `github` | Flattens raw JSON into typed columns |
+| `stg_github__readme` | staging | `github` | Stages README content |
+| `stg_github__languages` | staging | `github` | Stages language breakdowns |
+| `stg_github__topics` | staging | `github` | Stages topic arrays |
+| `stg_github__detection` | staging | `github` | Stages FastText detection results |
+| `stg_public__project` | staging | `ml` | Stages projects for ML |
+| `stg_public__user` | staging | `ml` | Stages users for ML |
+| `int_project_enriched` | intermediate | `github` | Joins project + readme + languages + topics + detection |
+| `int_project_contextualized` | intermediate | `ml` | Builds context strings for embedding |
+| `int_project_embedding_candidate` | intermediate | `ml` | Filters projects ready for embedding |
+| `int_user_enriched` | intermediate | `ml` | Builds user context strings |
+| `fct_github_project` | mart | `github` | Final project fact table |
+| `fct_public_user` | mart | `ml` | Final user fact table |
+| `match_global_recommendation` | mart | `public` | Top-N global recommendations |
+| `match_user_recommendation` | mart | `public` | Per-user personalized recommendations |
+
+## Macros
+
+| Macro | Purpose |
+|-------|---------|
+| `clean_text(column)` | Strip HTML, normalize whitespace |
+| `deduplicate(relation, partition_by, order_by)` | Window-function dedup |
+| `jsonb_to_list(column)` | JSONB array to comma-separated string |
+| `build_project_context(...)` | Concatenate project fields into embedding input |
+| `build_user_context(...)` | Concatenate user fields into embedding input |
+| `safe_divide(num, denom)` | Returns NULL on division by zero |
+| `clamp(expr)` | Clamps value to 0-1 range |
+| `generate_schema_name(...)` | Uses `+schema` directly, no prefix |
+
+## Recommendation Scoring
+
+**Global:** Top-N projects (default 20) that are trending or published, ordered by recency and stars.
+
+**User (hybrid scoring):**
+
+```
+final_score = 0.40 * similarity
+            + 0.35 * preference
+            + 0.15 * freshness
+            + 0.10 * popularity
+```
+
+- **Similarity** -- cosine similarity between user and project embeddings (pgvector)
+- **Preference** -- weighted overlap: tech stacks (30%), categories (45%), domains (25%)
+- **Freshness** -- linear decay over 90 days from last push
+- **Popularity** -- log-normalized star count, clamped to 0-1
+
+Minimum similarity threshold: 0.25. Max recommendations per user: 30. All params are dbt vars in `dbt_project.yml`.
+
+## Profiles
+
+| Profile | Host | Port |
+|---------|------|------|
+| `local` (default) | `localhost` | 5433 |
+| `docker` | `db` | 5432 |
+
+Switch with `export DBT_TARGET=docker`.

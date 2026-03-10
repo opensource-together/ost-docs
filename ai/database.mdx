@@ -1,0 +1,60 @@
+---
+title: "Database Schema"
+description: "PostgreSQL schemas and pgvector setup"
+---
+
+## Overview
+
+Single PostgreSQL database with **pgvector**, organized into 4 schemas. Schema is defined in Prisma (`prisma/schema.prisma`) and shared with the backend.
+
+## `public` -- User-Facing Data
+
+| Table | Description |
+|-------|-------------|
+| `user` | User accounts with social links and GitHub/GitLab identities |
+| `Project` | Published projects with metadata |
+| `Category` | Project categories (Framework, Library, CLI Tool, etc.) |
+| `Domain` | Project domains (Web Dev, DevOps, Data Science, etc.) |
+| `tech_stack` | Technologies and languages |
+| `user_tech_stack`, `user_categories`, `user_domain` | User preference junctions |
+| `project_tech_stack`, `project_category`, `project_domain` | Project attribute junctions |
+| `project_bookmark` | User bookmarks |
+| `match_global_recommendation` | Top-N global recommendations (dbt-materialized) |
+| `match_user_recommendation` | Per-user personalized recommendations (dbt-materialized) |
+
+## `github` -- Ingestion Data
+
+| Table | Description |
+|-------|-------------|
+| `raw_github_project` | Raw JSON from GitHub Search API (Go scraper) |
+| `raw_github_readme`, `raw_github_languages`, `raw_github_topics` | Fetched enrichment data (Go fetcher) |
+| `int_github_detection` | FastText language detection results (Python) |
+| `stg_github__*` | Staged data (dbt) |
+| `int_project_enriched` | Joined enriched project data (dbt) |
+| `fct_github_project` | Final fact table (dbt) |
+
+## `ml` -- Machine Learning
+
+| Table | Description |
+|-------|-------------|
+| `embd_github_project` | 384-dim project embedding vectors (Python) |
+| `embd_user` | 384-dim user embedding vectors (Python) |
+| `stg_public__project`, `stg_public__user` | Staged data for ML (dbt) |
+| `int_user_enriched`, `int_project_contextualized`, `int_project_embedding_candidate` | ML prep models (dbt) |
+| `fct_public_user` | User fact table (dbt) |
+
+## `match` -- Classification
+
+| Table | Description |
+|-------|-------------|
+| `project_classification` | LLM-assigned category and domain with confidence scores |
+
+## pgvector
+
+The `vector` extension enables cosine similarity search on 384-dimensional embeddings (MiniLM-L6-v2). Similarity is computed as `1 - cosine_distance` directly in dbt SQL models. Minimum similarity threshold is 0.25 (configurable via dbt var).
+
+Vectors are defined in Prisma as `Unsupported("vector")` since Prisma does not natively support the pgvector type.
+
+## Schema Routing
+
+dbt models are routed to PostgreSQL schemas via the `generate_schema_name` macro and `+schema` in `dbt_project.yml`. The macro uses the configured schema name directly without prefix.

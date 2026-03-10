@@ -1,6 +1,56 @@
+---
+title: "Troubleshooting"
+description: "Common issues and solutions for OST Linker"
+---
+
 ## Common Issues
-- Missing environment variables
-- Restarting dagster to clear cache
-- Port conflicts
-- Prisma errors (migrations)
-- Database connection problems
+
+### Missing Environment Variables
+
+Dagster fails to load definitions. Ensure all required vars are set in `.env`: `DATABASE_URL`, `GITHUB_ACCESS_TOKEN`, `OPENROUTER_API_KEY`, `GO_SCRAPER_PATH`, `GO_FETCHER_PATH`.
+
+### dbt Manifest Not Found
+
+`FileNotFoundError: Could not find manifest.json` at Dagster startup. Fix: run `cd dbt && dbt parse`.
+
+### Go Binary Not Found
+
+`RuntimeError: Go scraper binary not found`. Compile with `scripts/go_binary_gen.sh` and set absolute paths in `.env`.
+
+### Database Connection Errors
+
+`connection refused` or `password authentication failed`. Check: is PostgreSQL running (`docker compose ps`)? Is the port 5433? Does `DATABASE_URL` match your config?
+
+### Port Conflicts
+
+`Address already in use`. Check with `lsof -i :3000` or `lsof -i :5433` and stop the conflicting process.
+
+### FastText Model Missing
+
+`FileNotFoundError: FastText model not found`. Download it:
+
+```bash
+mkdir -p models
+wget -O models/lid.176.ftz https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz
+```
+
+### Dagster Stale State
+
+Assets show outdated status or schedules do not trigger. Fix: `scripts/clean_dagster.sh` (deletes all run history).
+
+### OpenRouter API Errors
+
+Check that `OPENROUTER_API_KEY` is valid, the service is reachable (`curl https://openrouter.ai/api/v1/models`), and you have credits. The 45s per-project timeout means transient failures are expected.
+
+### Prisma Schema Drift
+
+dbt models fail due to missing tables/columns. Fix: `npx prisma db push`. For full reset: `npx prisma db push --force-reset && npx ts-node prisma/seed/seed.ts`.
+
+## Cleanup Commands
+
+| Task | Command |
+|------|---------|
+| Clean dbt artifacts | `cd dbt && dbt clean` |
+| Clear Dagster history | `scripts/clean_dagster.sh` |
+| Remove Docker resources | `scripts/clean_docker_images.sh` |
+| Full reset | `docker compose down -v && cd dbt && dbt clean && cd .. && rm -rf dagster_home/ && docker compose up --build -d` |

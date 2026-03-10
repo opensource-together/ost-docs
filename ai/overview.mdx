@@ -1,90 +1,59 @@
+---
+title: "Architecture Overview"
+description: "High-level architecture of the OST Linker AI recommendation engine"
+---
 
+## What is OST Linker?
 
-Learn about the OST AI-Engine architecture and features
+OST Linker is the AI-powered recommendation engine for [OpenSourceTogether](https://opensource-together.com/). It scrapes GitHub for open-source projects, classifies them via LLM, computes embeddings, and surfaces personalized recommendations using pgvector cosine similarity.
 
-<img
-	className="block rounded-2xl mb-6"
-	src="../images/ost-chevalier.png"
-	alt="OST Chevalier"
-/>
+The pipeline is fully automated and orchestrated by **Dagster**.
 
-## Introduction
+## Tech Stack
 
-The AI-Engine is a modular, extensible data & machine learning platform designed to orchestrate, analyze, and enrich open-source project data. 
-Its mission is to automate the collection, transformation, and ranking of data from sources like GitHub and GitLab, powering advanced analytics and dashboards for the [OpenSource Together](https://opensource-together.com) ecosystem.
+- **Orchestration:** Dagster (assets, jobs, schedules, sensors)
+- **Data transformation:** dbt (staging, intermediate, marts)
+- **Ingestion:** Go 1.24 (scraper + fetcher binaries)
+- **ML / Classification:** Python 3.11, SentenceTransformer (MiniLM-L6-v2), FastText, OpenRouter (Mistral)
+- **REST API:** FastAPI (read-only, consumed by MCP server)
+- **MCP Server:** TypeScript ([ost-mcp](https://github.com/opensource-together/ost-mcp)), exposes project discovery tools to AI assistants
+- **Database:** PostgreSQL + pgvector (384-dim vectors, cosine similarity)
+- **Schema management:** Prisma (4 schemas: `public`, `github`, `ml`, `match`)
+- **Containerization:** Docker (3-stage build)
+- **CI/CD:** GitHub Actions
 
-<Info>
-	<b>Core Principle:</b> The AI Engine centralizes data intelligence for open-source communities, enabling automated workflows, unified data models, and scalable enrichment pipelines.
-</Info>
+## Pipeline Stages
 
-## Key Features
+1. **Ingestion** -- Go binaries scrape GitHub, FastText filters languages, dbt stages the data
+2. **Classification** -- LLM (Mistral Small 3.2) assigns Category and Domain to each project
+3. **Sync** -- Enriched data is written to the public-facing `Project` table
+4. **Project ML** -- dbt builds context strings, SentenceTransformer computes embeddings, global recommendations are generated
+5. **User ML** -- Same flow for users, producing personalized recommendations via hybrid scoring
 
-<CardGroup cols={2}>
-	<Card title="Automated Scraping" icon="robot" href="/ai/pipeline">
-		Collects and updates project data from GitHub & GitLab sources automatically
-	</Card>
-	<Card title="Data Mapping" icon="shuffle" href="/ai/structure">
-		Transforms raw data into a unified, queryable format for analytics and dashboards
-	</Card>
-	<Card title="Ranking & Filtering" icon="star" href="/ai/pipeline">
-		Ranks projects by popularity, activity, and custom metrics
-	</Card>
-	<Card title="Prisma Integration" icon="database" href="/ai/installation">
-		Seamless integration with a PostgreSQL database using Prisma ORM
-	</Card>
-	<Card title="Dagster Orchestration" icon="repeat" href="/ai/pipeline">
-		Robust pipeline orchestration, scheduling, and asset checks with Dagster
-	</Card>
-	<Card title="Installation & Setup" icon="wrench" href="/ai/installation">
-		Step-by-step guide to install dependencies, configure environment, and deploy the AI Engine
-	</Card>
-</CardGroup>
+## Key Design Decisions
 
-## Technology Stack
-
-<AccordionGroup>
-	<Accordion title="Orchestration & Pipelines">
-		- <b>Dagster</b>: Data pipeline orchestration, scheduling, and asset management
-	</Accordion>
-	<Accordion title="Database & ORM">
-		- <b>Prisma</b>: Type-safe ORM for PostgreSQL
-		- <b>PostgreSQL</b>: Scalable relational database
-	</Accordion>
-    <Accordion title="Programming Language">
-        - <b>Python 3.13+</b>: Core engine and pipeline logic
-        - <b>Go 1.20+</b>: Ingestion services and high-performance modules
-    </Accordion>
-	<Accordion title="DevOps & Integration">
-		- <b>Docker</b>: Containerized deployment
-		- <b>GitHub Actions</b>: CI/CD workflows
-	</Accordion>
-</AccordionGroup>
-
-## Architecture Principles
-
-The AI Engine follows a <b>feature-based architecture</b> with clear separation of concerns:
-
-<Info>
-	<b>Extensibility:</b> Easily add new data sources, assets, and custom logic via modular connectors and pipelines.
-</Info>
-
-### Key Architectural Decisions
-
-1. <b>Modular Connectors:</b> Each data source (GitHub, GitLab, etc.) is handled by an autonomous connector module
-2. <b>Unified Data Model:</b> All raw data is mapped to a consistent schema for analytics and dashboards
-3. <b>Automated Pipelines:</b> Dagster orchestrates scraping, transformation, and enrichment workflows
-4. <b>Type Safety & Reliability:</b> Prisma ensures robust database operations and schema validation
-5. <b>Scalability:</b> Designed to handle thousands of projects and contributors
+- **Go for ingestion** -- concurrent HTTP with goroutines, compiled to static binaries called by Dagster
+- **dbt for transformations** -- SQL-first modeling with contracts and tests
+- **Hybrid scoring** -- similarity (40%) + preference overlap (35%) + freshness (15%) + popularity (10%)
+- **pgvector** -- native PostgreSQL extension, no external vector DB needed
+- **Prisma** -- single schema definition shared with the backend
 
 ## Getting Started
 
-Ready to build with the AI Engine? Follow our <a href="/ai/quickstart">Quick Start Guide</a> to set up your development environment.
-
 <CardGroup cols={2}>
-	<Card title="Quick Start" icon="rocket" href="/ai/quickstart">
-		Get up and running in minutes
-	</Card>
-	<Card title="Architecture Guide" icon="sitemap" href="/ai/structure">
-		Deep dive into the AI Engine architecture
-	</Card>
+  <Card title="Pipeline Deep-Dive" icon="diagram-project" href="/ai/pipeline">
+    Assets, jobs, schedules, and resources
+  </Card>
+  <Card title="Installation" icon="wrench" href="/ai/installation">
+    Set up the development environment
+  </Card>
+  <Card title="Database Schema" icon="database" href="/ai/database">
+    PostgreSQL schemas and pgvector setup
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/ai/structure">
+    Codebase directory layout
+  </Card>
+  <Card title="REST API & MCP" icon="plug" href="/ai/rest-api">
+    API endpoints and MCP server integration
+  </Card>
 </CardGroup>

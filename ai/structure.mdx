@@ -1,25 +1,101 @@
-# Project Structure
-```python
-config/
-    config.py               # Generates YAML from env
-    config.yaml             # Centralized config file
-src/
-    dagster/
-        assets.py           # Dagster assets definition
-        dagster.yaml        # Dagster config instance
-        definitions.py      # Dagster jobs, schedules, sensors
-        config/             # Centralized config files
-            config.py       # Source YAML generated on project root config/config.yaml
-            github_mapping.py
-    infrastructure/
-        services/
-            go/
-                github/
-                    go.mod, main.go, main_test.go
-                gitlab/
-                    go.mod, main.go, main_test.go
-prisma/
-    schema.prisma, migrations/, seed/
-docs/
-    ai/*.mdx
+---
+title: "Project Structure"
+description: "Directory layout of the OST Linker codebase"
+---
+
+## Top-Level Layout
+
 ```
+ost-linker/
+  src/
+    linker/                # Dagster module (Python)
+    services/              # Go binaries + Python DB helpers
+  dbt/                     # dbt project (SQL transformations)
+  prisma/                  # Database schema and seeds
+  scripts/                 # Utility shell scripts
+  models/                  # ML model files (FastText)
+  dagster_home/            # Dagster metadata (local dev)
+  docs/                    # Documentation (Mintlify)
+  .github/workflows/       # CI/CD workflows
+  pyproject.toml           # Python config (uv, pytest, ruff, mypy, dagster)
+  Dockerfile               # 3-stage Docker build
+  docker-compose.yml       # Production compose
+  docker-compose.override.yml  # Dev overrides (db, volumes)
+```
+
+## `src/linker/` -- Dagster Module
+
+```
+src/linker/
+  definitions.py           # Dagster Definitions entry point
+  assets/                  # All Dagster assets (scraper, classification, sync, embedding)
+  resources/               # Config, LLM, SentenceTransformer, FastText, IO manager
+  jobs/                    # Job definitions
+  schedules/               # Schedule definitions
+  sensors/                 # Reserved for future sensors
+  utils/                   # Language detection, serialization helpers
+```
+
+## `src/services/api/` -- REST API (FastAPI)
+
+```
+src/services/api/
+  main.py                  # FastAPI app, lifespan, rate limit handler
+  config.py                # APIConfig (pydantic-settings)
+  database.py              # ConnectionPool (psycopg2)
+  dependencies.py          # FastAPI dependency injection
+  schemas.py               # Pydantic v2 response models
+  rate_limit.py            # slowapi Limiter (60 req/min/IP)
+  routes/
+    health.py              # GET /health
+    projects.py            # search, detail, similar
+    recommendations.py     # trending
+    references.py          # categories, domains, techstacks
+```
+
+## `src/services/go/` -- Go Binaries
+
+```
+src/services/go/
+  scraper/                 # GitHub Search API scraper
+  fetcher/                 # README, languages, topics fetcher (3 modes)
+```
+
+## `dbt/` -- Data Transformation
+
+```
+dbt/
+  dbt_project.yml          # Config, vars (weights, thresholds), schema routing
+  profiles.yml             # Connection profiles (local / docker)
+  models/                  # staging/ intermediate/ marts/
+  macros/                  # clean_text, build_project_context, safe_divide, etc.
+  tests/                   # Singular dbt tests
+  sources/                 # Source definitions
+```
+
+## `prisma/` -- Schema Management
+
+```
+prisma/
+  schema.prisma            # Single source of truth for all 4 DB schemas
+  seed/                    # Seeds categories, domains, tech stacks
+```
+
+## Key Config Files
+
+| File | Purpose |
+|------|---------|
+| `pyproject.toml` | Python deps, pytest, ruff/mypy, Dagster module |
+| `dagster.yaml` | Dagster instance config |
+| `workspace.yaml` | Points to `src.linker.definitions` |
+| `Dockerfile` | 3-stage build (Go, Python, runtime) |
+| `.env.example` | Required environment variables template |
+
+## Utility Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/go_binary_gen.sh` | Compile Go binaries |
+| `scripts/clean_dagster.sh` | Clear Dagster storage |
+| `scripts/sync_prisma.sh` | Sync Prisma schema to backend |
+| `scripts/clean_docker_images.sh` | Remove dangling Docker images |
