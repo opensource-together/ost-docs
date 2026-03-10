@@ -1,0 +1,120 @@
+---
+title: "REST API & MCP"
+description: "FastAPI service and MCP server for project discovery"
+---
+
+## Overview
+
+OST Linker exposes a **read-only REST API** (FastAPI) that serves project data to the **OST MCP server**. Together, they let developers discover and explore open-source projects directly from Claude Desktop, IDEs, and other MCP-compatible clients.
+
+```
+User (Claude Desktop / IDE)
+  -> MCP Server (stdio, TypeScript)
+    -> OST Linker REST API (HTTP, Python)
+      -> PostgreSQL (pgvector)
+```
+
+## REST API
+
+**Location:** `src/services/api/`
+
+The API is a lightweight FastAPI service with sync endpoints and a psycopg2 connection pool. It runs as a separate Docker container with minimal environment (only `DATABASE_URL`, no Dagster/LLM secrets).
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/projects/search?q=...` | Search projects by keyword (supports `category`, `domain`, `techstack` filters) |
+| `GET` | `/projects/{id}` | Get full project details (includes categories, domains, tech stacks) |
+| `GET` | `/projects/{id}/similar` | Find similar projects via pgvector cosine similarity |
+| `GET` | `/recommendations/trending` | Get globally trending projects |
+| `GET` | `/categories` | List all categories |
+| `GET` | `/domains` | List all domains |
+| `GET` | `/techstacks` | List all tech stacks |
+
+### Rate Limiting
+
+All endpoints (except `/health`) are rate-limited to **60 requests/minute per IP** using [slowapi](https://github.com/laurentS/slowapi) decorators. Exceeding the limit returns `429 Too Many Requests`.
+
+### Running Locally
+
+```bash
+# Requires DATABASE_URL in .env
+uvicorn src.services.api.main:app --host 0.0.0.0 --port 8000
+```
+
+### Docker
+
+The API runs as the `api` service in `docker-compose.yml` on port **8000**, with a health check at `/health`.
+
+```yaml
+api:
+  environment:
+    DATABASE_URL: ${DATABASE_URL}
+    API_HOST: ${API_HOST:-0.0.0.0}
+    API_PORT: ${API_PORT:-8000}
+    API_RATE_LIMIT: ${API_RATE_LIMIT:-60}
+    DAGSTER_ROLE: api
+```
+
+<Info>
+The API container does **not** receive Dagster, GitHub, or LLM secrets -- only `DATABASE_URL` and API-specific variables.
+</Info>
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `main.py` | FastAPI app, lifespan (pool init/close), rate limit handler |
+| `config.py` | `APIConfig` (pydantic-settings), reads env vars |
+| `database.py` | `ConnectionPool` wrapper (psycopg2 `SimpleConnectionPool`) |
+| `schemas.py` | Pydantic v2 response models |
+| `rate_limit.py` | slowapi `Limiter` instance |
+| `routes/` | One file per route group (health, projects, recommendations, references) |
+
+---
+
+## MCP Server (ost-mcp)
+
+**Repository:** [opensource-together/ost-mcp](https://github.com/opensource-together/ost-mcp)
+
+A TypeScript MCP server that wraps the REST API into 7 tools for AI assistants.
+
+### Tools
+
+| Tool | API Endpoint | Description |
+|------|-------------|-------------|
+| `search_projects` | `GET /projects/search` | Search projects by keyword with optional filters |
+| `get_project` | `GET /projects/{id}` | Get full project details |
+| `find_similar` | `GET /projects/{id}/similar` | Find similar projects via AI embeddings |
+| `get_trending` | `GET /recommendations/trending` | Get trending projects |
+| `list_categories` | `GET /categories` | List all categories |
+| `list_domains` | `GET /domains` | List all domains |
+| `list_techstacks` | `GET /techstacks` | List all tech stacks |
+
+### Installation
+
+Add to your Claude Desktop or MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "ost": {
+      "command": "npx",
+      "args": ["@opensource-together/mcp"],
+      "env": {
+        "OST_API_URL": "https://api.opensource-together.com"
+      }
+    }
+  }
+}
+```
+
+### Architecture
+
+- `src/index.ts` -- MCP server entry point, registers all tools via `@modelcontextprotocol/sdk`
+- `src/client.ts` -- `OSTClient` HTTP client (fetch with 10s timeout)
+- `src/tools/` -- One file per tool group (search, project, similar, trending, references)
+- `src/config.ts` -- Reads `OST_API_URL` from env (defaults to production)
+- `src/types.ts` -- Shared TypeScript interfaces matching API response schemas

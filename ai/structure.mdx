@@ -36,6 +36,23 @@ src/linker/
   utils/                   # Language detection, serialization helpers
 ```
 
+## `src/services/api/` -- REST API (FastAPI)
+
+```
+src/services/api/
+  main.py                  # FastAPI app, lifespan, rate limit handler
+  config.py                # APIConfig (pydantic-settings)
+  database.py              # ConnectionPool (psycopg2)
+  dependencies.py          # FastAPI dependency injection
+  schemas.py               # Pydantic v2 response models
+  rate_limit.py            # slowapi Limiter (60 req/min/IP)
+  routes/
+    health.py              # GET /health
+    projects.py            # search, detail, similar
+    recommendations.py     # trending
+    references.py          # categories, domains, techstacks
+```
+
 ## `src/services/go/` -- Go Binaries
 
 ```

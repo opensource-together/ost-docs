@@ -78,7 +78,8 @@
               "ai/pipeline",
               "ai/database",
               "ai/dbt",
-              "ai/go-services"
+              "ai/go-services",
+              "ai/rest-api"
             ]
           },
           {

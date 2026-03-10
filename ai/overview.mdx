@@ -15,6 +15,8 @@ The pipeline is fully automated and orchestrated by **Dagster**.
 - **Data transformation:** dbt (staging, intermediate, marts)
 - **Ingestion:** Go 1.24 (scraper + fetcher binaries)
 - **ML / Classification:** Python 3.11, SentenceTransformer (MiniLM-L6-v2), FastText, OpenRouter (Mistral)
+- **REST API:** FastAPI (read-only, consumed by MCP server)
+- **MCP Server:** TypeScript ([ost-mcp](https://github.com/opensource-together/ost-mcp)), exposes project discovery tools to AI assistants
 - **Database:** PostgreSQL + pgvector (384-dim vectors, cosine similarity)
 - **Schema management:** Prisma (4 schemas: `public`, `github`, `ml`, `match`)
 - **Containerization:** Docker (3-stage build)
@@ -50,5 +52,8 @@ The pipeline is fully automated and orchestrated by **Dagster**.
   </Card>
   <Card title="Project Structure" icon="folder-tree" href="/ai/structure">
     Codebase directory layout
+  </Card>
+  <Card title="REST API & MCP" icon="plug" href="/ai/rest-api">
+    API endpoints and MCP server integration
   </Card>
 </CardGroup>
