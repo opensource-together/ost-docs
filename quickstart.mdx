@@ -1,260 +1,137 @@
 ---
-title: "Platform Quickstart"
-description: "Get the complete OpenSource Together platform running in minutes"
+title: "Run the app locally"
+description: "Get OpenSource Together running on your machine in two commands: no backend, no database, no credentials"
 ---
 
-## Welcome to OpenSource Together! 🚀
-
-This quickstart guide will help you get the entire OpenSource Together platform running locally in just a few steps. Our platform consists of four main components working together to provide a comprehensive open-source project discovery and collaboration experience.
-
-## What You'll Build
-
-<CardGroup cols={2}>
-  <Card title="Frontend" icon="monitor">
-    Next.js application with intelligent project discovery and user dashboard
-  </Card>
-  <Card title="Backend" icon="server">
-    NestJS API with user management and project operations
-  </Card>
-  <Card title="AI Engine" icon="brain">
-    ML-powered recommendation system with real-time API
-  </Card>
-  <Card title="Documentation" icon="book-open">
-    Comprehensive documentation built with Mintlify
-  </Card>
-</CardGroup>
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-<CardGroup cols={2}>
-  <Card title="Node.js" icon="node-js">
-    Version 18.17 or later [Download Node.js](https://nodejs.org/)
-  </Card>
-  <Card title="pnpm" icon="package">
-    Fast package manager ```bash npm install -g pnpm ```
-  </Card>
-  <Card title="Docker" icon="docker">
-    For PostgreSQL and Redis [Download Docker](https://docker.com/)
-  </Card>
-  <Card title="Python" icon="python">
-    Version 3.13+ for AI Engine [Download Python](https://python.org/)
-  </Card>
-</CardGroup>
-
-## Step 1: Clone and Install
-
-### 1.1 Clone the Repository
+## Two commands
 
 ```bash
 git clone https://github.com/opensource-together/opensource-together.git
 cd opensource-together
+pnpm install
+pnpm dev:mock
 ```
 
-### 1.2 Install Dependencies
-
-<AccordionGroup>
-  <Accordion title="Root Dependencies">
-    ```bash # Install root dependencies pnpm install ```
-  </Accordion>
-  <Accordion title="Frontend Dependencies">
-    ```bash cd apps/ost-frontend pnpm install ```
-  </Accordion>
-  <Accordion title="Backend Dependencies">
-    ```bash cd apps/ost-backend npm install ```
-  </Accordion>
-  <Accordion title="AI Engine Dependencies">
-    ```bash cd apps/ost-ai-engine pip install uv uv sync --group dev ```
-  </Accordion>
-</AccordionGroup>
-
-## Step 2: Environment Configuration
-
-### 2.1 Frontend Environment
-
-```bash
-cd apps/ost-frontend
-cp .env.example .env.local
-```
-
-Configure these variables in `.env.local`:
-
-```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-```
-
-### 2.2 Backend Environment
-
-```bash
-cd apps/ost-backend
-cp .env.example .env
-```
-
-Configure these variables in `.env`:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/ost_backend"
-JWT_SECRET="your-super-secret-jwt-key"
-GITHUB_CLIENT_ID="your_github_client_id"
-GITHUB_CLIENT_SECRET="your_github_client_secret"
-PORT=3001
-```
-
-### 2.3 AI Engine Environment
-
-```bash
-cd apps/ost-ai-engine
-cp .env.example .env
-```
-
-Configure these variables in `.env`:
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5434/OST_PROD
-REDIS_CACHE_URL=redis://localhost:6379/0
-GITHUB_ACCESS_TOKEN=your_github_token
-MLFLOW_TRACKING_URI=sqlite:///logs/mlflow.db
-GO_API_PORT=8080
-```
-
-## Step 3: Start Services
-
-### 3.1 Database Services
-
-<AccordionGroup>
-  <Accordion title="Start Backend Database">
-    ```bash cd apps/ost-backend docker compose up -d ```
-  </Accordion>
-  <Accordion title="Start AI Engine Database">
-    ```bash cd apps/ost-ai-engine docker-compose up -d db redis ```
-  </Accordion>
-</AccordionGroup>
-
-### 3.2 Database Setup
-
-<AccordionGroup>
-  <Accordion title="Backend Database Setup">
-    ```bash cd apps/ost-backend npx prisma generate npx prisma migrate dev npx
-    prisma db seed ```
-  </Accordion>
-  <Accordion title="AI Engine Database Setup">
-    ```bash cd apps/ost-ai-engine psql -d OST_PROD -f
-    scripts/database/recreate_schema.sql uv run python
-    scripts/database/create_test_users.py ```
-  </Accordion>
-</AccordionGroup>
-
-## Step 4: Start Applications
-
-You'll need multiple terminal windows for this step:
-
-<AccordionGroup>
-  <Accordion title="Terminal 1: Frontend">
-    ```bash cd apps/ost-frontend pnpm dev ``` Available at:
-    http://localhost:3000
-  </Accordion>
-  <Accordion title="Terminal 2: Backend">
-    ```bash cd apps/ost-backend npm run start:dev ``` Available at:
-    http://localhost:3001
-  </Accordion>
-  <Accordion title="Terminal 3: AI Engine Pipeline">
-    ```bash cd apps/ost-ai-engine uv run dagster dev ``` Dagster UI at:
-    http://localhost:3000 (if not occupied)
-  </Accordion>
-  <Accordion title="Terminal 4: AI Engine API">
-    ```bash cd apps/ost-ai-engine/src/api/go go build -o recommendations-api
-    recommendations.go ./recommendations-api ``` API available at:
-    http://localhost:8080
-  </Accordion>
-</AccordionGroup>
-
-## Step 5: Verify Installation
-
-<AccordionGroup>
-  <Accordion title="Frontend Check">
-    Open http://localhost:3000 and verify the OpenSource Together dashboard loads.
-  </Accordion>
-  <Accordion title="Backend Check">
-    ```bash
-    curl http://localhost:3001/health
-    ```
-    Should return: `{"status":"ok","timestamp":"..."}`
-  </Accordion>
-  <Accordion title="AI Engine Check">
-    ```bash
-    curl http://localhost:8080/health
-    ```
-    Should return: `{"status":"healthy","timestamp":"..."}`
-  </Accordion>
-</AccordionGroup>
+Open [http://localhost:3000](http://localhost:3000). That's the whole setup.
 
 <Success>
-  **Congratulations!** 🎉 You now have the complete OpenSource Together platform
-  running locally.
+  **No `.env` file. No database. No Docker. No OAuth app. No backend access.** `pnpm dev:mock`
+  starts a local mock of the API alongside the web app, seeded with realistic project data.
 </Success>
 
-## Next Steps
-
-Now that you have everything running, explore these resources:
+## Prerequisites
 
 <CardGroup cols={2}>
-  <Card title="Frontend Development" icon="monitor" href="/frontend/quickstart">
-    Learn about the Next.js frontend architecture
+  <Card title="Node.js 22+" icon="node-js">
+    The repo requires `node >= 22`. [Download Node.js](https://nodejs.org/)
   </Card>
-  <Card title="Backend Development" icon="server" href="/backend/quickstart">
-    Understand the NestJS backend API
-  </Card>
-  <Card title="AI Engine Development" icon="brain" href="/ai/quickstart">
-    Explore the ML pipeline and recommendations
-  </Card>
-  <Card title="Complete Development Guide" icon="tools" href="/development">
-    Comprehensive development workflow
+  <Card title="pnpm 10" icon="box">
+    ```bash
+    npm install -g pnpm
+    ```
+    CI builds with pnpm 10. Other package managers aren't supported.
   </Card>
 </CardGroup>
 
-## Troubleshooting
+## What `pnpm dev:mock` starts
+
+It runs two processes side by side and stops both if either one fails:
+
+| Process | Port | What it is |
+| --- | --- | --- |
+| `web` | [3000](http://localhost:3000) | The Next.js app, in dev mode with Turbopack |
+| `api` | 4000 | A local mock of the OpenSource Together API |
+
+The mock is a real HTTP server: an Express app serving [MSW](https://mswjs.io/) handlers, not
+a browser service worker. Server components, `generateMetadata`, and the sitemap all talk to it
+too, because the script points both `NEXT_PUBLIC_API_URL` and `INTERNAL_SERVER_API_URL` at
+`localhost:4000`.
+
+<Note>
+  The script sets every environment variable it needs inline, so **you do not need to copy
+  `.env.example`**. Only the optional feature-request form and S3 metadata assets read
+  variables the mock doesn't provide.
+</Note>
+
+## Signing in without OAuth
+
+You're signed in by default: the mock API issues the same session cookie the real backend uses,
+so protected routes like `/dashboard/my-projects` and `/projects/create` just work.
+
+To test signed-out states, use the **Mock mode** button in the **bottom-left corner** of the
+page. It flips between *Signed in* and *Signed out* and reloads.
+
+<Warning>
+  Mock data lives in memory. Projects you create, profile edits, and uploaded images all
+  disappear when you restart the mock server. That's intentional, so every contributor starts
+  from the same state.
+</Warning>
+
+## Verify your setup
+
+<Steps>
+  <Step title="The homepage lists projects">
+    [http://localhost:3000](http://localhost:3000) should show a grid of seeded open-source
+    projects with working filters and search.
+  </Step>
+  <Step title="A protected route loads">
+    Visit [http://localhost:3000/dashboard/my-projects](http://localhost:3000/dashboard/my-projects).
+    You should see projects owned by the mock user, not a redirect to the login page.
+  </Step>
+  <Step title="The mock API answers">
+    ```bash
+    curl http://localhost:4000/categories
+    ```
+    Returns a `{ "data": [...], "timestamp": "..." }` payload.
+  </Step>
+  <Step title="The test suite passes">
+    ```bash
+    pnpm test:mock
+    ```
+  </Step>
+</Steps>
+
+## Common issues
 
 <AccordionGroup>
-  <Accordion title="Port Conflicts">
-    If you encounter port conflicts: - Frontend: `pnpm dev -- -p 3001` -
-    Backend: Change `PORT=3002` in `.env` - AI Engine API: Change
-    `GO_API_PORT=8081` in `.env`
+  <Accordion title="Port 3000 or 4000 is already in use">
+    Both ports are fixed by `dev:mock`. Free them, or run the two processes yourself with
+    different values:
+
+    ```bash
+    MOCK_API_PORT=4100 pnpm exec tsx src/mocks/api.mock.ts
+    NEXT_PUBLIC_API_URL=http://localhost:4100 INTERNAL_SERVER_API_URL=http://localhost:4100 pnpm dev
+    ```
+
   </Accordion>
-  <Accordion title="Database Connection Issues">
-    Ensure Docker is running: ```bash docker ps docker compose down && docker
-    compose up -d ```
+  <Accordion title="A request returns 501">
+    The mock API returns `501` for any route it doesn't handle, and logs
+    `[mock-api] UNHANDLED <method> <path>` in the terminal. It means the flow you're building
+    needs a handler that doesn't exist yet. See [adding a handler](/web-app/mock-api).
   </Accordion>
-  <Accordion title="Environment Variables">
-    Make sure all `.env` files are properly configured and restart the services.
+  <Accordion title="`pnpm install` fails on the lockfile">
+    CI installs with `--frozen-lockfile`. If you changed dependencies, commit the updated
+    `pnpm-lock.yaml` along with your `package.json` change.
+  </Accordion>
+  <Accordion title="I want to run against the real API">
+    `pnpm dev` (without `:mock`) expects the API at `http://localhost:4000` and requires access
+    to the private backend. Contributors should use `pnpm dev:mock`.
   </Accordion>
 </AccordionGroup>
 
-## Need Help?
+## Next steps
 
-<CardGroup cols={3}>
-  <Card
-    title="GitHub Issues"
-    icon="github"
-    href="https://github.com/opensource-together/opensource-together/issues"
-  >
-    Report bugs or ask questions
+<CardGroup cols={2}>
+  <Card title="How to contribute" icon="code-branch" href="/contributing/contributing">
+    Branches, commits, and what CI will check
   </Card>
-  <Card
-    title="Discord Community"
-    icon="discord"
-    href="https://discord.gg/opensource-together"
-  >
-    Real-time community support
+  <Card title="The codebase" icon="sitemap" href="/web-app/architecture">
+    How features, the data layer, and conventions fit together
   </Card>
-  <Card
-    title="Contributing Guide"
-    icon="code-branch"
-    href="/contributing/index"
-  >
-    Learn how to contribute to the project
+  <Card title="Mock API guide" icon="plug" href="/web-app/mock-api">
+    Add handlers and seed data for new flows
+  </Card>
+  <Card title="Web app setup & scripts" icon="terminal" href="/web-app/quickstart">
+    Every script, env var, and tooling detail
   </Card>
 </CardGroup>

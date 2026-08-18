@@ -1,0 +1,319 @@
+---
+title: "Architecture"
+description: "How the OpenSource Together web app is structured: features, the data layer, conventions, and styling"
+---
+
+## The shape of the codebase
+
+The web app uses a **feature-based architecture**: code is grouped by what it does for the
+product, not by what kind of file it is. A feature owns its components, its API calls, its
+state, and its types.
+
+```
+src/
+├── app/            # App Router: routes, layouts, metadata, sitemap, OG images
+├── config/         # config.ts: API base URL resolution
+├── features/       # auth · dashboard · profile · projects
+├── mocks/          # the local mock API (see the Mock API guide)
+├── shared/         # cross-feature components, hooks, lib, services, types
+└── middleware.ts   # route protection
+```
+
+The rule of thumb: **start inside a feature. Move to `shared/` on the second use.**
+
+## Features
+
+Each feature can use up to eight folders. Not every feature needs all of them. Use what the
+feature actually requires.
+
+| Folder | Holds |
+| --- | --- |
+| `components/` | UI specific to this feature |
+| `views/` | Page-level compositions rendered by a route |
+| `forms/` | React Hook Form components |
+| `hooks/` | Query keys, queries, mutations, and local logic |
+| `services/` | Functions that call the API |
+| `stores/` | Zustand client state |
+| `validations/` | Zod schemas |
+| `types/` | TypeScript types |
+
+What the four current features actually use:
+
+| Feature | Folders used |
+| --- | --- |
+| `projects/` | all eight, the largest feature |
+| `profile/` | all but `stores/` |
+| `auth/` | components, views, hooks, services, types, validations |
+| `dashboard/` | components, hooks, views. It reuses `profile` and `projects` services |
+
+<Note>
+  There are no `index.ts` barrel files. Imports always point at the concrete file, which keeps
+  module graphs explicit and avoids accidental circular imports.
+</Note>
+
+## The data layer
+
+This is the part most worth understanding before you write code. Every API interaction flows
+through the same four layers:
+
+```
+component  →  hook (.queries.ts / .mutations.ts)  →  service (.service.ts)  →  api-client
+```
+
+Components never call `fetch`. Services never call `useQuery`.
+
+### 1. The API client
+
+`src/shared/lib/api-client.ts` is the single place a network request is made. It exports:
+
+| Export | Purpose |
+| --- | --- |
+| `apiRequest<T>(path, options)` | Returns the **full** response envelope. Use for paginated endpoints. |
+| `apiData<T>(path, options)` | Unwraps and returns `response.data`. Use for single resources. |
+| `withQueryParams(path, params)` | Builds a query string; skips `null`/`undefined`, joins arrays with `,` |
+| `ApiError` | Thrown on non-2xx, carrying `status` and the parsed `body` |
+
+Every request sends `credentials: "include"`. That's how the session cookie travels. Passing
+`json` sets `Content-Type` automatically; pass `body` directly for `FormData` uploads.
+
+<Warning>
+  `apiData` throws `Invalid API response for <path>: missing data` if the payload has no `data`
+  key. If you're adding a mock handler, it must return the real envelope shape. See the
+  [API response format](/api-reference/introduction#response-format).
+</Warning>
+
+### 2. Services
+
+A service is a plain async function. No React, no caching, no error handling beyond what
+`ApiError` gives you.
+
+```typescript
+// src/features/projects/services/project.service.ts
+export function getProject(
+  projectId: string,
+  context: ApiRequestContext = {}
+): Promise<Project> {
+  return apiData<Project>(`/projects/${projectId}`, context);
+}
+
+export function getProjects(
+  params?: ProjectQueryParams,
+  context: ApiRequestContext = {}
+): Promise<PaginatedProjectsResponse> {
+  return apiRequest<PaginatedProjectsResponse>(
+    withQueryParams("/projects", params),
+    context
+  );
+}
+```
+
+The trailing `context: ApiRequestContext` argument carries `{ headers?, signal? }`. It's what
+lets queries pass an abort signal and lets server components forward cookies.
+
+### 3. Query keys
+
+Every feature has a `*.keys.ts` file exporting hierarchical key factories. This is what makes
+targeted cache invalidation possible.
+
+```typescript
+// src/features/projects/hooks/project.keys.ts
+export const projectKeys = {
+  all: ["projects"] as const,
+  lists: () => [...projectKeys.all, "list"] as const,
+  infiniteList: (params: Omit<ProjectQueryParams, "page">) =>
+    [...projectKeys.lists(), "infinite", params] as const,
+  details: () => [...projectKeys.all, "detail"] as const,
+  detail: (projectId: string) => [...projectKeys.details(), projectId] as const,
+  repositorySummary: (projectId: string) =>
+    [...projectKeys.detail(projectId), "repository-summary"] as const,
+};
+
+export const projectMutationKeys = {
+  create: () => ["projects", "create"] as const,
+  update: () => ["projects", "update"] as const,
+  bookmark: () => ["projects", "bookmark"] as const,
+  // …
+};
+```
+
+Because keys nest, invalidating `projectKeys.lists()` refreshes every list variant without
+touching cached detail pages.
+
+<Warning>
+  Never write a query key inline. `queryKey: ["projects", id]` bypasses the factory and won't
+  be invalidated by mutations that target `projectKeys.detail(id)`.
+</Warning>
+
+### 4. Queries and mutations
+
+Reads go in `*.queries.ts`, writes in `*.mutations.ts`.
+
+```typescript
+// src/features/projects/hooks/project.queries.ts
+export function useProjectQuery(projectId: string) {
+  return useQuery<Project>({
+    queryKey: projectKeys.detail(projectId),
+    queryFn: ({ signal }) => getProject(projectId, { signal }),
+    enabled: !!projectId,
+  });
+}
+```
+
+Note `{ signal }` being forwarded into the service. TanStack Query aborts in-flight requests
+when a component unmounts, and every service supports it.
+
+Mutations use a key from `*MutationKeys` and invalidate what they changed:
+
+```typescript
+export function useUpdateProjectMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: projectMutationKeys.update(),
+    mutationFn: ({ projectId, data }: UpdateProjectVariables) =>
+      updateProject(projectId, data),
+    onSuccess: (project) => {
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.detail(project.id),
+      });
+      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+    },
+  });
+}
+```
+
+## Server state vs client state
+
+<CardGroup cols={2}>
+  <Card title="TanStack Query: server state" icon="cloud">
+    Anything that came from the API. Cached, deduplicated, invalidated. This is the vast
+    majority of state in the app.
+  </Card>
+  <Card title="Zustand: client state" icon="browser">
+    State the server doesn't own. In practice: **one store**, the project-creation wizard.
+  </Card>
+</CardGroup>
+
+Never mirror API data into Zustand. It's the fastest way to ship a stale-data bug.
+
+### Query client configuration
+
+`src/shared/lib/query-client.ts` builds the client: `staleTime` 5 minutes, `gcTime` 30 minutes,
+`retry: 2`, and `refetchOnWindowFocus: false`. `shouldDehydrateQuery` is widened to include
+**pending** queries, which is what makes streaming work.
+
+`src/app/providers.tsx` wraps the tree in `QueryClientProvider` and
+`ReactQueryStreamedHydration`.
+
+<Note>
+  **The app uses streaming hydration only.** There is no `HydrationBoundary`, no
+  `prefetchQuery`, and no `useSuspenseQuery` anywhere in the codebase. Server components render
+  client views that call `useQuery`, and results stream in. Follow that pattern rather than
+  introducing a second one.
+</Note>
+
+### The one Zustand store
+
+`src/features/projects/stores/project-create.store.ts` holds the multi-step project creation
+form: the chosen method, form fields, selected repository, and the current step. It's wrapped
+in `devtools(persist(...))`, persisted under `project-create-storage`, and partialized to
+`{ formData, currentStep }` so a refresh doesn't lose progress.
+
+## Server-side data fetching
+
+Some routes fetch on the server: `generateMetadata`, the OG image routes, and `sitemap.ts`.
+For **authenticated** server-side reads, cookies must be forwarded explicitly:
+
+```typescript
+// src/shared/lib/server-api-context.ts ("server-only")
+const context = await getServerApiContext(); // { headers: { cookie } }
+const profile = await getUserById(userId, context);
+```
+
+Server-side requests resolve their base URL from `INTERNAL_SERVER_API_URL`, which is what lets
+the app talk to the API over an internal network in Docker.
+
+## Authentication
+
+better-auth runs on the **API**, not here. This repository contains only the client:
+
+- `src/shared/lib/auth-client.ts`: `createAuthClient()` pointed at `NEXT_PUBLIC_API_URL`
+- `src/features/auth/services/auth.service.ts`: sign in, link/unlink a provider, sign out,
+  delete account
+- **`getCurrentUser()` (hitting `GET /users/me`) is the app's real source of truth** for
+  who's signed in. It returns `null` on a 401. The `useCurrentUserQuery()` hook wraps it under
+  the key `["user", "me"]`.
+
+### Route protection
+
+`src/middleware.ts` guards `/profile/me`, `/projects/create`, `/projects/:id/edit`,
+`/onboarding`, and `/dashboard`. It checks only for the **presence** of a cookie starting with
+`better-auth.session`. No token validation, no API call. Unauthenticated visitors are sent to
+`/auth/login?redirectTo=…`.
+
+<Note>
+  Cookie-presence checking is why the [mock API](/web-app/mock-api) can exercise protected
+  routes with no OAuth at all: it sets the same cookie name.
+</Note>
+
+A global `<OnboardingRedirect />` in `providers.tsx` pushes signed-in users with an incomplete
+profile to `/onboarding`.
+
+## File naming
+
+Files are kebab-case with a suffix that says what they are:
+
+| Suffix | Used for | Example |
+| --- | --- | --- |
+| `.component.tsx` | UI components | `project-grid.component.tsx` |
+| `.view.tsx` | Page-level views | `project-detail.view.tsx` |
+| `.form.tsx` | React Hook Form components | `profile-edit-main.form.tsx` |
+| `.service.ts` | API call functions | `project.service.ts` |
+| `.keys.ts` | Query key factories | `project.keys.ts` |
+| `.queries.ts` | `useQuery` hooks | `project.queries.ts` |
+| `.mutations.ts` | `useMutation` hooks | `project.mutations.ts` |
+| `.hook.ts` | Other hooks | `use-pagination.hook.ts` |
+| `.store.ts` | Zustand stores | `project-create.store.ts` |
+| `.schema.ts` | Zod schemas | `project.schema.ts` |
+| `.type.ts` | TypeScript types | `profile.type.ts` |
+| `.mock.ts` | Mock-only files | `handlers.mock.ts` |
+
+<Warning>
+  **Known deviations.** The codebase isn't uniform, and you'll notice:
+
+  - Some feature hooks skip the suffix (`use-project-bookmark.ts`). `src/shared/hooks/` is
+    consistent; feature hooks aren't.
+  - `src/shared/components/ui/` is mostly bare kebab-case (`button.tsx`) because shadcn
+    generates it that way. Only a few files use `.component.tsx`.
+  - One file is PascalCase: `src/shared/components/shared/ProjectCard.tsx`.
+
+  Follow the table for new files. Don't rename existing ones as a drive-by. It makes reviews
+  harder for no functional gain.
+</Warning>
+
+## Styling
+
+Tailwind v4, configured entirely in CSS at `src/app/globals.css`:
+
+- `@theme inline { … }` maps design tokens to utility classes
+- `:root { … }` holds the raw values in `oklch()`, including the brand ramp
+  `--ost-blue-one` → `--ost-blue-four` and semantic tokens like `--destructive` and `--success`
+- `@layer base` sets border, ring, selection, and heading defaults
+
+There is **no `tailwind.config.js`**. Adding one has no effect.
+
+Compose classes with `cn()` from `src/shared/lib/utils.ts` (clsx + tailwind-merge). Biome
+auto-sorts classes inside `cn`, `clsx`, and `cva`.
+
+Shared UI lives in `src/shared/components/`:
+
+| Folder | Contents |
+| --- | --- |
+| `ui/` | shadcn primitives plus project-specific components (uploads, comboboxes, cards, markdown rendering) |
+| `layout/` | Header, footer, breadcrumbs, page shells |
+| `motion/` | `fade-in`, `fade-up` animation wrappers |
+| `seo/` | Components powering the dynamic OG image routes |
+
+<Card title="Next: features & routes" icon="puzzle-piece" href="/web-app/features" horizontal>
+  What each feature contains, and every URL in the app.
+</Card>

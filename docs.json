@@ -19,48 +19,43 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Introduction",
-            "pages": ["index", "quickstart", "development"]
+            "group": "Get started",
+            "pages": ["index", "quickstart"]
           },
           {
             "group": "Contributing",
-            "pages": ["contributing/contributing", "contributing/deployment"]
+            "pages": [
+              "contributing/contributing",
+              "contributing/learn-content",
+              "contributing/deployment",
+              "development"
+            ]
           }
         ]
       },
 
       {
-        "tab": "Frontend",
+        "tab": "Web App",
         "groups": [
           {
             "group": "Overview",
-            "pages": ["frontend/overview"]
+            "pages": ["web-app/overview"]
           },
           {
-            "group": "Getting Started",
+            "group": "Getting started",
             "pages": [
-              "frontend/quickstart",
-              "frontend/features",
-              "frontend/architecture"
+              "web-app/quickstart",
+              "web-app/architecture",
+              "web-app/features"
             ]
           },
           {
             "group": "Development",
-            "pages": ["frontend/development", "frontend/faq"]
-          }
-        ]
-      },
-
-      {
-        "tab": "Backend",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["backend/overview"]
-          },
-          {
-            "group": "Developer Guide",
-            "pages": ["backend/quickstart", "backend/faq"]
+            "pages": [
+              "web-app/mock-api",
+              "web-app/development",
+              "web-app/faq"
+            ]
           }
         ]
       },
@@ -92,74 +87,50 @@
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "TechStacks",
-            "pages": ["api-reference/endpoint/techstacks/get-all-tech-stacks"]
+            "group": "Project",
+            "pages": [
+              "api-reference/endpoint/project/list-projects-with-filters-and-pagination",
+              "api-reference/endpoint/project/create-a-new-project",
+              "api-reference/endpoint/project/get-a-project-by-id",
+              "api-reference/endpoint/project/update-a-project",
+              "api-reference/endpoint/project/delete-a-project",
+              "api-reference/endpoint/project/get-project-repository-summary",
+              "api-reference/endpoint/project/get-project-issues",
+              "api-reference/endpoint/project/get-a-project-issue",
+              "api-reference/endpoint/project/claim-project-ownership",
+              "api-reference/endpoint/project/add-project-to-bookmarks",
+              "api-reference/endpoint/project/remove-project-from-bookmarks",
+              "api-reference/endpoint/project/update-project-logo",
+              "api-reference/endpoint/project/add-image-to-project-gallery",
+              "api-reference/endpoint/project/remove-image-from-project-gallery"
+            ]
           },
           {
             "group": "User",
             "pages": [
               "api-reference/endpoint/user/get-current-authenticated-user",
-              "api-reference/endpoint/user/list-user-repositories-from-github-or-gitlab",
-              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab",
-              "api-reference/endpoint/user/list-user-projects",
               "api-reference/endpoint/user/get-a-user-by-id",
               "api-reference/endpoint/user/update-a-user",
+              "api-reference/endpoint/user/update-user-profile-picture",
+              "api-reference/endpoint/user/update-user-banner",
+              "api-reference/endpoint/user/list-user-projects",
               "api-reference/endpoint/user/list-projects-by-user-id",
-              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab-1",
-              "api-reference/endpoint/user/update-user-profile-picture"
+              "api-reference/endpoint/user/list-user-bookmarked-projects",
+              "api-reference/endpoint/user/list-user-repositories-from-github-or-gitlab",
+              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab",
+              "api-reference/endpoint/user/list-user-pull-requests-from-github-or-gitlab-1"
             ]
           },
           {
-            "group": "Categories",
-            "pages": ["api-reference/endpoint/categories/get-all-categories"]
-          },
-          {
-            "group": "Project",
+            "group": "Tech stacks & categories",
             "pages": [
-              "api-reference/endpoint/project/list-projects-with-filters-and-pagination",
-              "api-reference/endpoint/project/create-a-new-project",
-              "api-reference/endpoint/project/get-project-repository-summary",
-              "api-reference/endpoint/project/get-a-project-by-id",
-              "api-reference/endpoint/project/delete-a-project",
-              "api-reference/endpoint/project/update-a-project",
-              "api-reference/endpoint/project/get-project-issues",
-              "api-reference/endpoint/project/get-a-project-issue",
-              "api-reference/endpoint/project/claim-project-ownership",
-              "api-reference/endpoint/project/add-image-to-project-gallery",
-              "api-reference/endpoint/project/remove-image-from-project-gallery",
-              "api-reference/endpoint/project/update-project-logo"
+              "api-reference/endpoint/techstacks/get-all-tech-stacks",
+              "api-reference/endpoint/categories/get-all-categories"
             ]
           },
           {
             "group": "Health",
             "pages": ["api-reference/endpoint/health/check-apps-health"]
-          }
-        ]
-      },
-
-      {
-        "tab": "Resources",
-        "groups": [
-          {
-            "group": "Customization",
-            "pages": ["essentials/settings", "essentials/navigation"]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI Tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
           }
         ]
       }
@@ -168,19 +139,19 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "GitHub",
+          "href": "https://github.com/opensource-together/opensource-together",
+          "icon": "github"
         },
         {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
+          "anchor": "Discord",
+          "href": "https://discord.com/invite/4ZDhm3dQAC",
+          "icon": "discord"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Open the app",
+          "href": "https://opensource-together.com",
+          "icon": "compass"
         }
       ]
     }
@@ -189,15 +160,11 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@opensource-together.com"
+        "type": "github",
+        "label": "GitHub",
+        "href": "https://github.com/opensource-together/opensource-together"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    ]
   },
 
   "contextual": {
@@ -217,7 +184,8 @@
     "socials": {
       "x": "https://x.com/OpenSTogether",
       "github": "https://github.com/opensource-together",
-      "linkedin": "https://linkedin.com/company/opensource-together"
+      "linkedin": "https://linkedin.com/company/opensource-together",
+      "discord": "https://discord.com/invite/4ZDhm3dQAC"
     }
   }
 }

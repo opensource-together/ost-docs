@@ -1,0 +1,92 @@
+---
+title: "Features & Routes"
+description: "Which feature owns what, every route in the app, and the things that catch people out"
+---
+
+## The four features
+
+All domain code lives under `src/features/`. If you know the page you're changing, this tells
+you which folder to open.
+
+| Folder | Owns |
+| --- | --- |
+| `projects/` | Discovery, project detail, the creation wizard, issues, bookmarks, claiming. The largest feature, and the only one using all eight subfolders. |
+| `profile/` | Public and own profiles, the contribution graph, pull requests, experiences, pinned projects. |
+| `auth/` | OAuth sign-in, the onboarding flow, and the current-user query the whole app reads from. |
+| `dashboard/` | The signed-in shell: owned projects and settings. Deliberately thin: it composes `profile` and `projects` services rather than owning its own. |
+
+Inside each one the layout is the same (`components/`, `views/`, `hooks/`, `services/` and so
+on), so `ls` is faster than any list I could keep accurate here. The
+[architecture guide](/web-app/architecture) explains what belongs in each subfolder.
+
+## Routes
+
+### Public
+
+| URL | Page |
+| --- | --- |
+| `/` | Project discovery, the homepage |
+| `/projects/<projectId>` | Project detail |
+| `/profile/<userId>` | Public profile |
+| `/learn`, `/learn/chapters`, `/learn/<slug>` | The Learn knowledge base (26 static chapters) |
+| `/auth/login` | Sign in |
+| `/privacy-policy`, `/terms-and-conditions` | Legal pages |
+
+### Requires a session
+
+Guarded by `src/middleware.ts`, and excluded from indexing in `src/app/robots.ts`.
+
+| URL | Page |
+| --- | --- |
+| `/onboarding` | Profile completion after first sign-in |
+| `/dashboard/my-projects`, `/dashboard/settings` | The dashboard |
+| `/profile/me`, `/profile/me/edit` | Your own profile |
+| `/projects/<projectId>/edit` | Project editing |
+| `/projects/create/…` | The creation wizard |
+
+The wizard runs across six steps under `/projects/create`: choose a method, import a
+repository, confirm it, describe the project, pick tech and categories, done. They share a
+layout that mounts the wizard's Zustand store.
+
+## Things that catch people out
+
+<AccordionGroup>
+  <Accordion title="There is no /projects index route">
+    Project discovery lives on `/`. A link to `/projects` returns a 404. This surprises
+    nearly everyone, because the detail route is `/projects/<projectId>`.
+  </Accordion>
+  <Accordion title="Only one route handler exists, and it isn't the API">
+    `POST /api/feature-request` forwards the feature-request form to a Discord webhook. Every
+    other request goes to the external API. See the
+    [API Reference](/api-reference/introduction). There is no Next.js API layer proxying the
+    backend.
+  </Accordion>
+  <Accordion title="The dashboard sidebar has dead-looking links">
+    Analytics, Chat, and Invitations are rendered **disabled**. Those routes don't exist yet.
+    they're placeholders, not something you broke.
+  </Accordion>
+  <Accordion title="The wizard's provider segment is validated">
+    `/projects/create/<provider>/…` accepts only `github` or `gitlab`. Anything else calls
+    `notFound()`.
+  </Accordion>
+  <Accordion title="Learn isn't a feature">
+    `/learn` is driven by MDX files in `content/learn/` and `content/hands-on/` at the
+    repository root, indexed by `content/chapters.ts`, not by a folder under `src/features/`.
+    Chapters are prerendered, so adding one requires a rebuild. See
+    [Writing Learn content](/contributing/learn-content).
+  </Accordion>
+  <Accordion title="No route groups, no catch-alls">
+    The only dynamic segments are `[slug]`, `[userId]`, `[projectId]` and `[provider]`. There
+    are no route groups, parallel routes, or intercepting routes to reason about.
+  </Accordion>
+</AccordionGroup>
+
+## Beyond pages
+
+`src/app/` also holds the files that shape how the app is crawled and shared: `sitemap.ts`
+(static routes plus every trending published project), `robots.ts`, `manifest.ts`, and two
+dynamic Open Graph image routes for projects and profiles.
+
+<Card title="Next: development guide" icon="code" href="/web-app/development" horizontal>
+  Recipes for adding an API call, a mutation, a page, or a component.
+</Card>

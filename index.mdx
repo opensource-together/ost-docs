@@ -1,6 +1,6 @@
 ---
-title: "OST Documentation"
-description: "Comprehensive documentation for the OpenSource Together platform - discover, grow, and contribute to open-source projects"
+title: "OpenSource Together"
+description: "Documentation for contributors to OpenSource Together: discover, grow, and contribute to open-source projects with your community"
 ---
 
 <img
@@ -9,128 +9,77 @@ description: "Comprehensive documentation for the OpenSource Together platform -
   alt="Hero"
 />
 
-## Welcome to OpenSource Together!
+## Welcome
 
-OpenSource Together is a comprehensive platform that helps you discover, grow, and contribute to open-source projects with your community. Our platform combines intelligent recommendations, community features, and powerful tools to make open-source collaboration more accessible and engaging.
+**OpenSource Together** helps people find open-source projects worth contributing to, and
+helps maintainers find contributors. This site is the documentation for the people building
+it: you.
 
-## Platform Overview
+<Card title="Run the app in two commands" icon="rocket" href="/quickstart" horizontal>
+  No database, no Docker, no API keys. Really.
+</Card>
 
-Our platform consists of four main components working together to provide a seamless experience:
+## What's open source
 
-<CardGroup cols={2}>
-  <Card title="Frontend" icon="palette" href="/frontend/overview">
-    Modern Next.js application with feature-based architecture, providing an
-    intuitive user interface for discovering and managing open-source projects.
+<CardGroup cols={3}>
+  <Card title="Web App" icon="palette" href="/web-app/overview">
+    **Open source. Contribute here.** The Next.js web app: project discovery, profiles,
+    dashboard, and the Learn knowledge base.
   </Card>
-  <Card title="Backend" icon="server" href="/backend/overview">
-    Robust NestJS API with PostgreSQL and Prisma, handling authentication, data
-    management, and business logic.
+  <Card title="API" icon="server" href="/api-reference/introduction">
+    **Closed source.** A private service. You don't need it: its contract is fully documented
+    and mocked locally.
   </Card>
   <Card title="AI Engine" icon="brain" href="/ai/overview">
-    Intelligent recommendation system powered by machine learning, providing
-    personalized project suggestions and insights.
-  </Card>
-  <Card title="Documentation" icon="book-open" href="/docs">
-    Comprehensive documentation built with Mintlify, providing guides, API
-    references, and best practices.
+    The data and machine-learning pipeline that collects and ranks project data. Separate
+    repository.
   </Card>
 </CardGroup>
 
-## Quick Start
+<Info>
+  **The API is not open source today**, so you can't run it locally, and you don't have to.
+  The repository ships a complete local mock of the API with realistic seed data, so
+  every screen and flow works offline. See the [Mock API guide](/web-app/mock-api).
+</Info>
 
-Get up and running with OpenSource Together in minutes:
+## Start contributing
 
 <CardGroup cols={2}>
-  <Card title="Frontend Setup" icon="monitor" href="/frontend/quickstart">
-    Set up the Next.js frontend application
+  <Card title="Get the app running" icon="play" href="/quickstart">
+    Clone, install, and start in under five minutes
   </Card>
-  <Card title="Backend Setup" icon="server" href="/backend/quickstart">
-    Configure the NestJS backend with database
+  <Card title="How to contribute" icon="code-branch" href="/contributing/contributing">
+    Branches, commits, pull requests, and what CI checks
   </Card>
-  <Card title="AI Engine Setup" icon="brain" href="/ai/quickstart">
-    Set up the ML pipeline and recommendation API
+  <Card title="Understand the codebase" icon="sitemap" href="/web-app/architecture">
+    Feature-based architecture, the data layer, and conventions
   </Card>
-  <Card title="Full Platform Setup" icon="rocket" href="/quickstart">
-    Complete platform setup guide
+  <Card title="Write a Learn chapter" icon="book-open" href="/contributing/learn-content">
+    Contribute content instead of code, with no TypeScript required
   </Card>
 </CardGroup>
 
-## Key Features
-
-<AccordionGroup>
-  <Accordion title="Intelligent Recommendations">
-    Our AI-powered recommendation system analyzes your interests, activity
-    patterns, and project preferences to suggest the most relevant open-source
-    projects for you to explore and contribute to.
-  </Accordion>
-  <Accordion title="Community Dashboard">
-    Track your open-source journey with comprehensive analytics, contribution
-    history, and community engagement metrics. See your impact and growth over
-    time.
-  </Accordion>
-  <Accordion title="Project Management">
-    Create and manage projects from GitHub or start from scratch. Organize your
-    repositories, track issues, and coordinate with your community.
-  </Accordion>
-  <Accordion title="Secure Authentication">
-    Seamless GitHub OAuth integration with secure JWT-based authentication. Your
-    data is protected with industry-standard security practices.
-  </Accordion>
-</AccordionGroup>
-
-## Technology Stack
+## Technology
 
 <CardGroup cols={2}>
-  <Card title="Frontend" icon="react">
-    - Next.js 15 with App Router - TypeScript for type safety - Tailwind CSS for
-    styling - TanStack Query + Zustand for state management
+  <Card title="Framework" icon="react">
+    Next.js (App Router, Turbopack) · React · TypeScript
   </Card>
-  <Card title="Backend" icon="node-js">
-    - NestJS framework - PostgreSQL with Prisma ORM - JWT authentication - Redis
-    for caching
+  <Card title="Data & state" icon="database">
+    TanStack Query for server state · Zustand for client state · Zod + React Hook Form
   </Card>
-  <Card title="AI Engine" icon="python">
-    - Python 3.13+ for ML processing - Go 1.24+ for high-performance API - dbt
-    for data transformation - MLflow for model tracking
+  <Card title="UI" icon="palette">
+    Tailwind CSS (CSS-first config) · shadcn/ui on Radix primitives · Motion
   </Card>
-  <Card title="Infrastructure" icon="cloud">
-    - Docker containerization - GitHub Actions CI/CD - PostgreSQL with vector
-    extensions - Redis caching layer
+  <Card title="Tooling & delivery" icon="cloud">
+    Biome for lint and formatting · pnpm · Cloudflare Workers via OpenNext · Docker
   </Card>
 </CardGroup>
 
-## Getting Started as a Developer
+Exact versions live on the [Web App overview](/web-app/overview), one page to update when
+something is upgraded.
 
-<CardGroup cols={2}>
-  <Card
-    title="Contributing Guide"
-    icon="code-branch"
-    href="/contributing/index"
-  >
-    Learn how to contribute to the OpenSource Together platform
-  </Card>
-  <Card
-    title="Architecture Overview"
-    icon="sitemap"
-    href="/frontend/architecture"
-  >
-    Understand the platform architecture and design principles
-  </Card>
-  <Card
-    title="API Documentation"
-    icon="book-open"
-    href="/api-reference/introduction"
-  >
-    Explore our comprehensive API documentation
-  </Card>
-  <Card title="Development Setup" icon="tools" href="/development">
-    Set up your development environment
-  </Card>
-</CardGroup>
-
-## Community & Support
-
-Join our growing community of open-source enthusiasts:
+## Join the community
 
 <CardGroup cols={3}>
   <Card
@@ -138,62 +87,12 @@ Join our growing community of open-source enthusiasts:
     icon="github"
     href="https://github.com/opensource-together/opensource-together"
   >
-    Contribute to the project and report issues
+    Browse issues and open a pull request
   </Card>
-  <Card
-    title="Discord"
-    icon="discord"
-    href="https://discord.gg/opensource-together"
-  >
-    Join our community chat for real-time support
+  <Card title="Discord" icon="discord" href="https://discord.com/invite/4ZDhm3dQAC">
+    Ask questions and meet the team
   </Card>
-  <Card
-    title="Discussions"
-    icon="comments"
-    href="https://github.com/opensource-together/opensource-together/discussions"
-  >
-    Ask questions and share ideas with the community
-  </Card>
-</CardGroup>
-
-## Documentation Sections
-
-<AccordionGroup>
-  <Accordion title="Frontend Documentation">
-    - [Overview](/frontend/overview) - Frontend architecture and features -
-    [Architecture](/frontend/architecture) - Detailed architectural guide -
-    [Quick Start](/frontend/quickstart) - Get started with frontend development
-    - [FAQ](/frontend/faq) - Frequently asked questions
-  </Accordion>
-  <Accordion title="Backend Documentation">
-    - [Overview](/backend/overview) - Backend architecture and API - [Quick
-    Start](/backend/quickstart) - Set up the backend services -
-    [FAQ](/backend/faq) - Common backend questions
-  </Accordion>
-  <Accordion title="AI Engine Documentation">
-    - [Overview](/ai/overview) - ML pipeline and recommendation system - [Quick
-    Start](/ai/quickstart) - Configure the AI engine - [FAQ](/ai/faq) - AI
-    engine troubleshooting
-  </Accordion>
-  <Accordion title="API Reference">
-    - [Introduction](/api-reference/introduction) - API overview and
-    authentication - [Nest.js Endpoints](/api-reference/endpoint/nest) - Backend
-    API documentation - [AI Engine Endpoints](/api-reference/endpoint/ai-engine)
-    - Recommendation API
-  </Accordion>
-</AccordionGroup>
-
-## Ready to Get Started?
-
-<CardGroup cols={2}>
-  <Card title="Start Contributing" icon="rocket" href="/contributing/index">
-    Join our community and start contributing to open-source
-  </Card>
-  <Card
-    title="Explore the Platform"
-    icon="compass"
-    href="https://opensource-together.com"
-  >
-    Visit the live platform to see it in action
+  <Card title="𝕏" icon="x-twitter" href="https://x.com/OpenSTogether">
+    Follow along with what we ship
   </Card>
 </CardGroup>

@@ -1,0 +1,170 @@
+---
+title: "Setup & Scripts"
+description: "The web app development environment in detail: scripts, environment variables, tooling, and project layout"
+---
+
+<Info>
+  Just want the app running? [Run the app locally](/quickstart) is the two-command version.
+  This page is the reference for everything else.
+</Info>
+
+## Requirements
+
+| Tool | Version | Notes |
+| --- | --- | --- |
+| Node.js | `>= 22` | Enforced by `engines.node`; CI runs Node 22 |
+| pnpm | `10.x` | CI uses pnpm 10; the Docker build pins `10.33.4` |
+
+## Scripts
+
+<AccordionGroup>
+  <Accordion title="Development">
+    | Script | What it does |
+    | --- | --- |
+    | `pnpm dev:mock` | **The contributor entry point.** Mock API on `:4000` + Next dev on `:3000` |
+    | `pnpm dev` | Next dev only. Expects a real API at `:4000` (requires private backend access) |
+    | `pnpm preview` | `next build && next start`: a local production smoke test |
+  </Accordion>
+
+  <Accordion title="Quality">
+    | Script | What it does |
+    | --- | --- |
+    | `pnpm lint` | Biome: lint rules, formatting, and import order. Read-only, fails on drift |
+    | `pnpm lint:write` | The same, applying safe fixes |
+    | `pnpm lint:unsafe` | Also applies fixes Biome flags as unsafe. Review the diff |
+    | `pnpm type-check` | `tsc --noEmit` |
+    | `pnpm test:mock` | The mock API test suite (`node:test` via `tsx`) |
+  </Accordion>
+
+  <Accordion title="Build & deploy">
+    | Script | What it does |
+    | --- | --- |
+    | `pnpm build` | Production build (`output: "standalone"`) |
+    | `pnpm start` | Serve an existing build |
+    | `pnpm worker:build` | Cloudflare Workers bundle + copies Learn HTML into the assets |
+    | `pnpm worker:preview` | Run the Worker bundle locally in workerd |
+    | `pnpm worker:deploy` | Deploy to Cloudflare (maintainers only) |
+  </Accordion>
+</AccordionGroup>
+
+CI runs `lint`, `type-check`, `test:mock`, `build` and `worker:build`. Run all five before
+opening a pull request.
+
+## Environment variables
+
+<Note>
+  **`pnpm dev:mock` sets everything it needs inline**, so copying `.env.example` is not
+  required for local development.
+</Note>
+
+| Variable | Purpose | Needed locally? |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | API base URL used in the browser | Injected by `dev:mock` |
+| `INTERNAL_SERVER_API_URL` | API base URL used server-side (RSC, metadata, sitemap) | Injected by `dev:mock` |
+| `NEXT_PUBLIC_FRONTEND_URL` | The app's own origin; used by better-auth and mock CORS | Injected by `dev:mock` |
+| `NEXT_PUBLIC_API_MOCKING` | `enabled` renders the Mock mode toggle | Injected by `dev:mock` |
+| `MOCK_API_PORT` | Mock server port | Defaults to `4000` |
+| `NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET` | Base URL for OG/metadata image assets | Optional |
+| `DISCORD_WEBHOOK_URL` | Target for the feature-request form | Optional |
+
+Base URLs are resolved once in `src/config/config.ts`: server-side code uses
+`INTERNAL_SERVER_API_URL` (falling back to the public one), browser code uses
+`NEXT_PUBLIC_API_URL`. Trailing slashes are stripped, and a missing value logs a warning
+rather than throwing.
+
+## Project layout
+
+```
+opensource-together/
+├── content/              # Learn knowledge base (MDX) + chapters.ts index
+├── public/               # Static assets, fonts, mock images
+├── scripts/              # copy-learn-html.js (used by worker:build)
+├── src/
+│   ├── app/              # App Router: routes, layouts, metadata, sitemap, robots
+│   ├── config/           # config.ts: API base URL resolution
+│   ├── features/         # auth · dashboard · profile · projects
+│   ├── mocks/            # the local mock API
+│   ├── shared/           # components, hooks, lib, services, types, validations
+│   └── middleware.ts     # route protection
+├── biome.jsonc           # lint + format + import organization
+├── components.json       # shadcn/ui configuration
+├── next.config.ts
+└── open-next.config.ts   # Cloudflare Workers build
+```
+
+## Tooling notes
+
+<AccordionGroup>
+  <Accordion title="Imports: one alias only">
+    `@/*` maps to `./src/*`. There are no other path aliases.
+
+    ```typescript
+    import { apiData } from "@/shared/lib/api-client";
+    import { projectKeys } from "@/features/projects/hooks/project.keys";
+    ```
+
+    Import order is enforced by Biome's `organizeImports` assist. `pnpm lint` fails on
+    unsorted imports, `pnpm lint:write` fixes them.
+
+  </Accordion>
+
+  <Accordion title="Tailwind v4: there is no tailwind.config">
+    Tailwind is configured **in CSS**, in `src/app/globals.css`: an `@theme inline` block maps
+    design tokens to utilities, and `:root` holds the raw `oklch()` values, including the
+    brand ramp `--ost-blue-one` … `--ost-blue-four`.
+
+    To add or change a design token, edit `globals.css`. Don't create a `tailwind.config.js`.
+    It would be ignored.
+
+  </Accordion>
+
+  <Accordion title="shadcn/ui">
+    Configured in `components.json`: `new-york` style, `neutral` base colour, CSS variables,
+    RSC enabled. Components are aliased to `@/shared/components/ui`, utilities to
+    `@/shared/lib/utils`.
+
+    ```bash
+    pnpm dlx shadcn@latest add <component>
+    ```
+
+    Generated files land in `src/shared/components/ui/`.
+
+  </Accordion>
+
+  <Accordion title="Biome rules that bite">
+    - **`noEnum`**: TypeScript `enum` is banned. Use a union type or a `const` object.
+    - 80-column lines, 2-space indent, double quotes, ES5 trailing commas, semicolons always.
+    - Tailwind classes are auto-sorted inside `cn`, `clsx`, and `cva`.
+    - Several accessibility rules are disabled project-wide, so lint passing doesn't mean a
+      component is accessible. Check keyboard and screen-reader behaviour yourself.
+  </Accordion>
+
+  <Accordion title="Editor setup">
+    Install the **Biome** extension for your editor and set it as the default formatter for
+    JavaScript, TypeScript, and JSON. Biome respects `.gitignore`, and skips
+    `src/mocks/fixtures/projects.mock.json`, a large fixture that would be slow to format.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="A request returns 501 in dev">
+    The mock API doesn't have a handler for that route. Check the terminal for
+    `[mock-api] UNHANDLED <method> <path>` and see [the Mock API guide](/web-app/mock-api).
+  </Accordion>
+  <Accordion title="`pnpm lint` fails but the code looks fine">
+    It's usually formatting or import order, not a rule violation. Run `pnpm lint:write`.
+  </Accordion>
+  <Accordion title="My commit contains changes I didn't make">
+    The husky pre-commit hook runs Biome with `--write` on staged files and restages the
+    result. That's expected.
+  </Accordion>
+  <Accordion title="Type errors after pulling">
+    ```bash
+    pnpm install
+    pnpm type-check
+    ```
+    A stale `node_modules` after a dependency change is the usual cause.
+  </Accordion>
+</AccordionGroup>

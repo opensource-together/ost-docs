@@ -1,8 +1,93 @@
 ---
-title: "Deployment Guide"
-description: "Learn how to deploy the OpenSource Together platform to production"
+title: "Build & deployment"
+description: "How the OpenSource Together web app is built, published, and deployed"
 ---
 
-## Deployment Overview
+## Overview
 
-This guide covers deploying the complete OpenSource Together platform to production environments. The platform consists of multiple services that need to be deployed and configured properly.
+The web app is the only deployable open-source component. It ships two ways from the same
+codebase:
+
+- a **Docker image** published to GitHub Container Registry, built by CI
+- a **Cloudflare Workers** bundle built with [OpenNext](https://opennext.js.org/cloudflare),
+  deployed manually
+
+<Info>
+  You don't need any of this to contribute. It's here so you understand what happens after
+  your pull request merges, and why CI builds two different bundles.
+</Info>
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request to `main` and `develop`, on
+Node 22 with pnpm 10:
+
+```bash
+pnpm i --frozen-lockfile
+pnpm lint
+pnpm type-check
+pnpm test:mock
+pnpm build
+pnpm worker:build
+```
+
+Both `pnpm build` (the standalone Next.js output) and `pnpm worker:build` (the Cloudflare
+bundle) run, so a change that breaks either target fails the pull request.
+
+## Publishing
+
+| Workflow | Trigger | Result |
+| --- | --- | --- |
+| `publish-staging.yml` | Push to `develop` | Builds `Dockerfile` and pushes `ghcr.io/opensource-together/web-app` tagged `develop` and with the commit SHA |
+| `publish-prod.yml` | A GitHub **release** is created | Pushes the same image tagged with semver (`1.2.3`, `1.2`, `1`), `latest`, and the commit SHA |
+
+Public environment variables are baked in at image build time as Docker build args:
+`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_URL`, and
+`NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET`, supplied from repository secrets. Because they're
+compiled into the client bundle, an image is tied to the environment it was built for.
+
+### The Docker image
+
+`Dockerfile` is a three-stage build on `node:22-alpine`:
+
+1. **deps**: installs with `pnpm i --frozen-lockfile` (git hooks disabled via `HUSKY=0`)
+2. **builder**: runs `pnpm build`, which emits `output: "standalone"`
+3. **runner**: copies the standalone server plus static assets, runs as a non-root `nextjs`
+   user, listens on port `3000`
+
+```bash
+docker build -t ost-web-app \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.opensource-together.com \
+  --build-arg NEXT_PUBLIC_FRONTEND_URL=https://opensource-together.com .
+docker run -p 3000:3000 ost-web-app
+```
+
+## Cloudflare Workers
+
+```bash
+pnpm worker:build     # opennextjs-cloudflare build + copy Learn HTML into the asset bundle
+pnpm worker:preview   # run the Worker bundle locally in workerd
+pnpm worker:deploy    # deploy
+```
+
+`open-next.config.ts` enables static-asset incremental caching and cache interception.
+`wrangler.toml` defines the worker (`nodejs_compat`, a 60s CPU limit, and an `ASSETS` binding
+served from `.open-next/assets`).
+
+The extra step in `worker:build` is `scripts/copy-learn-html.js`, which copies the prerendered
+`/learn` chapter HTML into `.open-next/assets/learn` so Cloudflare serves those pages directly
+as static assets.
+
+<Warning>
+  **No workflow runs `worker:deploy`.** CI builds the Workers bundle to catch breakage, but
+  deploying it is a manual operation, and `wrangler.toml` is not tracked in the public
+  repository, so Cloudflare deployment is limited to maintainers with the account
+  configuration.
+</Warning>
+
+## The API
+
+The API is a separate, closed-source service deployed independently at
+`https://api.opensource-together.com`. Its contract is documented in the
+[API Reference](/api-reference/introduction), and contributors develop against the
+[local mock](/web-app/mock-api) instead.

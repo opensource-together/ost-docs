@@ -1,6 +1,6 @@
 ---
 title: "Contributing to OST"
-description: "Learn how to contribute to the OpenSource Together project"
+description: "How to make your first contribution to OpenSource Together: branches, commits, pull requests, and CI"
 ---
 
 <img
@@ -14,283 +14,208 @@ description: "Learn how to contribute to the OpenSource Together project"
   alt="Hero Dark"
 />
 
-## Welcome Contributors! 🎉
+## Welcome 🎉
 
-Thank you for your interest in contributing to OpenSource Together! This guide will help you get started with contributing to our multi-service platform.
+Thanks for wanting to contribute. This page describes what the project actually enforces: the
+commands CI runs, the branch it merges into, the hook that will rewrite your commit. Nothing
+here is aspirational.
 
-## Project Overview
+<Card title="Not set up yet?" icon="rocket" href="/quickstart" horizontal>
+  Get the app running in two commands first.
+</Card>
 
-OpenSource Together is a comprehensive platform consisting of:
+## What you can work on
 
 <CardGroup cols={2}>
-  <Card title="Frontend" icon="monitor" href="/frontend/overview">
-    Next.js application with feature-based architecture
+  <Card title="Web App" icon="palette" href="/web-app/overview">
+    **Next.js 15, React 19, TypeScript, Tailwind v4.** Features, UI, accessibility,
+    performance. This is where most contributions land.
   </Card>
-  <Card title="Backend" icon="server" href="/backend/overview">
-    NestJS API with PostgreSQL and Prisma
+  <Card title="Learn content" icon="book-open" href="/contributing/learn-content">
+    **MDX, no code required.** Write or improve a chapter of the Learn knowledge base.
   </Card>
-  <Card title="AI Engine" icon="brain" href="/ai/overview">
-    Python/Go ML pipeline for intelligent recommendations
+  <Card title="Mock API" icon="plug" href="/web-app/mock-api">
+    **MSW handlers.** Add coverage for flows the local mock doesn't reproduce yet.
   </Card>
-  <Card title="Documentation" icon="book-open" href="/docs">
-    Comprehensive documentation with Mintlify
+  <Card title="Documentation" icon="file-lines" href="/development">
+    **Mintlify, MDX.** These pages. Fix what's unclear, wrong, or missing.
   </Card>
 </CardGroup>
 
-## Quick Start for Contributors
+<Info>
+  **The API is closed source**, so there's no backend contribution path today. That's not a
+  blocker: the web app ships a full local mock of the API contract, so every feature can be
+  built and reviewed without it. The contract itself is documented in the
+  [API Reference](/api-reference/introduction).
+</Info>
 
-### 1. Choose Your Contribution Area
+## The workflow
 
-<AccordionGroup>
-  <Accordion title="Frontend Development">
-    - **Tech Stack**: Next.js, TypeScript, Tailwind CSS, TanStack Query, Zustand
-    - **Skills Needed**: React, TypeScript, CSS - **Good for**: UI/UX
-    improvements, feature development, component library
-  </Accordion>
-  <Accordion title="Backend Development">
-    - **Tech Stack**: NestJS, TypeScript, PostgreSQL, Prisma - **Skills
-    Needed**: Node.js, TypeScript, SQL, API design - **Good for**: API
-    development, database design, authentication
-  </Accordion>
-  <Accordion title="AI/ML Development">
-    - **Tech Stack**: Python, Go, dbt, MLflow, PostgreSQL - **Skills Needed**:
-    Python, Machine Learning, Data Engineering - **Good for**: Recommendation
-    algorithms, data pipelines, ML models
-  </Accordion>
-  <Accordion title="Documentation">
-    - **Tech Stack**: Mintlify, MDX, Markdown - **Skills Needed**: Technical
-    writing, Markdown - **Good for**: Documentation improvements, tutorials,
-    guides
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Fork and branch">
+    Branch from `develop`, not `main`.
 
-### 2. Set Up Your Development Environment
+    ```bash
+    git checkout develop
+    git pull
+    git checkout -b feat/your-feature
+    ```
 
-<CardGroup cols={2}>
-  <Card title="Frontend Setup" icon="palette" href="/frontend/quickstart">
-    Get the Next.js frontend running locally
-  </Card>
-  <Card title="Backend Setup" icon="server" href="/backend/quickstart">
-    Set up the NestJS backend with database
-  </Card>
-  <Card title="AI Engine Setup" icon="brain" href="/ai/quickstart">
-    Configure the ML pipeline and API
-  </Card>
-  <Card title="Documentation Setup" icon="book-open" href="/docs/development">
-    Set up local documentation development
-  </Card>
-</CardGroup>
+  </Step>
+  <Step title="Make your change">
+    Follow the [architecture guide](/web-app/architecture). Features live in
+    `src/features/`, cross-feature code in `src/shared/`.
+  </Step>
+  <Step title="Run what CI runs">
+    ```bash
+    pnpm lint
+    pnpm type-check
+    pnpm test:mock
+    pnpm build
+    pnpm worker:build
+    ```
+  </Step>
+  <Step title="Open a pull request against `develop`">
+    Keep it small and purposeful. Include before/after screenshots for anything visual. Avoid
+    unrelated formatting or refactors. They make review much harder.
+  </Step>
+</Steps>
 
-## Contribution Types
+### Branches
 
-### Bug Reports
+`develop` is the default branch. Pull requests target `develop`; `develop` is promoted to
+`main` for releases.
 
-When reporting bugs, please include:
+Branch names follow `type/kebab-case-description`:
 
-<AccordionGroup>
-  <Accordion title="Required Information">
-    - **Clear description** of the bug - **Steps to reproduce** the issue -
-    **Expected vs actual behavior** - **Environment details** (OS, browser,
-    Node.js version) - **Screenshots or error logs** if applicable
-  </Accordion>
-</AccordionGroup>
+| Prefix | Used for |
+| --- | --- |
+| `feat/` | New features |
+| `fix/` | Bug fixes |
+| `refactor/` | Restructuring without behaviour change |
+| `chore/` | Dependencies, config, tooling |
+| `design/` | Visual and UI polish |
 
-### Feature Requests
+Branches tied to a tracker issue also appear as `ost-420-short-description`. Nothing enforces
+either convention automatically. Match what's already there.
 
-When requesting features, please provide:
+### Commits
 
-- **Problem description** - What problem does this solve?
-- **Proposed solution** - How should it work?
-- **Use cases** - Who would benefit from this?
-- **Mockups or examples** if applicable
-
-### Code Contributions
-
-#### Pull Request Process
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** following our coding standards
-4. **Add tests** for new functionality
-5. **Update documentation** if needed
-6. **Commit your changes**: `git commit -m 'Add amazing feature'`
-7. **Push to your fork**: `git push origin feature/amazing-feature`
-8. **Open a Pull Request**
-
-#### Code Standards
-
-<AccordionGroup>
-  <Accordion title="Frontend Standards">
-    - Follow the [Frontend Architecture Guide](/frontend/architecture) - Use
-    TypeScript for all code - Follow naming conventions (`.component.tsx`,
-    `.hook.ts`, etc.) - Write tests for business logic - Use Prettier and ESLint
-  </Accordion>
-  <Accordion title="Backend Standards">
-    - Follow NestJS best practices - Use TypeScript for all code - Write unit
-    and integration tests - Follow API design patterns - Update OpenAPI
-    documentation
-  </Accordion>
-  <Accordion title="AI/ML Standards">
-    - Follow Python PEP 8 style guide - Write comprehensive tests - Document
-    model performance metrics - Use MLflow for experiment tracking - Update
-    pipeline documentation
-  </Accordion>
-</AccordionGroup>
-
-### Documentation Contributions
-
-We welcome improvements to our documentation:
-
-<CardGroup cols={2}>
-  <Card title="Content Improvements" icon="edit">
-    - Fix typos and grammar - Improve clarity and structure - Add missing
-    information
-  </Card>
-  <Card title="New Guides" icon="book">
-    - Tutorials and how-to guides - Architecture explanations - Best practices
-    documentation
-  </Card>
-  <Card title="Examples" icon="code">
-    - Code examples and snippets - API usage examples - Integration guides
-  </Card>
-  <Card title="Translation" icon="globe">
-    - Translate documentation to other languages - Improve accessibility
-  </Card>
-</CardGroup>
-
-## Development Workflow
-
-### Branch Strategy
-
-We use the following branch naming conventions:
-
-- `feature/description` - New features
-- `fix/description` - Bug fixes
-- `docs/description` - Documentation updates
-- `refactor/description` - Code refactoring
-- `test/description` - Test improvements
-
-### Commit Messages
-
-Follow the [Conventional Commits](https://conventionalcommits.org/) specification:
+[Conventional Commits](https://conventionalcommits.org/), lowercase, scope optional:
 
 ```
-type(scope): description
-
-[optional body]
-
-[optional footer]
+feat: add bookmark button to project cards
+fix: prevent duplicate bookmark requests
+refactor: extract pagination into a shared hook
+chore(deps): update next to 15.5.23
 ```
 
-Examples:
+The project also uses `design:` for UI polish and `doc:` (singular) for documentation. There's
+no commitlint and no `commit-msg` hook, so this is convention rather than validation.
 
-- `feat(frontend): add user dashboard component`
-- `fix(backend): resolve authentication token expiry issue`
-- `docs(ai): update pipeline documentation`
+## What CI checks
 
-### Testing Requirements
+Every push and pull request to `main` or `develop` runs the workflow in
+`.github/workflows/ci.yml` on Node 22:
+
+```bash
+pnpm i --frozen-lockfile
+pnpm lint          # Biome: lint, formatting, and import order
+pnpm type-check    # tsc --noEmit
+pnpm test:mock     # the mock API test suite
+pnpm build         # next build
+pnpm worker:build  # the Cloudflare Workers bundle
+```
+
+<Warning>
+  `--frozen-lockfile` means a stale or hand-edited `pnpm-lock.yaml` fails the build
+  immediately. If you touched `package.json`, commit the lockfile that `pnpm install`
+  regenerated.
+</Warning>
+
+Two things people miss: `pnpm build` and `pnpm worker:build` are part of CI, so a change that
+type-checks can still fail on a build-time error. Run all five before pushing.
+
+### Your commit will be reformatted
+
+A husky `pre-commit` hook runs Biome on staged files with `--write` and restages the result.
+Your commit may therefore contain formatting you didn't type. That's expected. The commit
+only fails if Biome finds something it can't fix automatically.
+
+Hooks install themselves when you run `pnpm install`.
+
+## Code standards
 
 <AccordionGroup>
-  <Accordion title="Backend Testing">
-    - Unit tests for services and controllers - Integration tests for API
-    endpoints - Database tests for data operations - Authentication and
-    authorization tests
+  <Accordion title="Formatting and linting: Biome, not ESLint/Prettier">
+    The project uses **Biome** for linting, formatting, and import organization. Run
+    `pnpm lint:write` to fix issues automatically.
+
+    Settings that surprise people: 80-column lines, double quotes, ES5 trailing commas, and
+    **TypeScript `enum` is banned** (`noEnum`). Use a union type or a `const` object instead.
+    Tailwind classes are auto-sorted inside `cn`, `clsx`, and `cva`.
+
   </Accordion>
-  <Accordion title="AI/ML Testing">
-    - Unit tests for data processing functions - Integration tests for ML
-    pipeline - Performance tests for API endpoints - Model evaluation tests
+  <Accordion title="Structure">
+    - Domain code belongs in its feature folder under `src/features/`.
+    - Cross-feature components, hooks, utilities and types go in `src/shared/`.
+    - Reuse existing design-system components and tokens before writing new styles.
+    - Keep existing naming patterns, and keep mock-only files suffixed with `.mock`.
+
+    Full details in the [architecture guide](/web-app/architecture).
+
+  </Accordion>
+  <Accordion title="Testing: be aware of what exists">
+    There is **one** automated test file: `src/mocks/handlers.mock.test.ts`, 15 cases run with
+    `node:test` via `pnpm test:mock`. It covers the mock API's behaviour and fixture
+    invariants.
+
+    There is no component, integration, end-to-end, or visual regression testing. Lint, types,
+    and the two builds are the safety net, which is exactly why running all five checks
+    matters, and why screenshots on visual PRs are genuinely useful to reviewers.
+
+    If you change mock behaviour or seed data, add a focused test.
+
   </Accordion>
 </AccordionGroup>
 
-## Getting Help
+## Reporting a problem
 
-### Communication Channels
+Before opening an issue, check which layer it's in:
+
+- The mock API logged an **unhandled route** and returned `501` → a local API flow is missing.
+  Say which route in the issue, or [add the handler](/web-app/mock-api).
+- Anything else → an app issue.
+
+Include reproduction steps, what you expected, and screenshots or console output.
+
+## Where to get help
 
 <CardGroup cols={3}>
-  <Card
-    title="GitHub Discussions"
-    icon="github"
-    href="https://github.com/opensource-together/opensource-together/discussions"
-  >
-    General discussions and Q&A
-  </Card>
-  <Card
-    title="Discord"
-    icon="discord"
-    href="https://discord.gg/opensource-together"
-  >
-    Real-time chat and collaboration
+  <Card title="Discord" icon="discord" href="https://discord.com/invite/4ZDhm3dQAC">
+    The fastest way to reach the team
   </Card>
   <Card
     title="GitHub Issues"
     icon="bug"
     href="https://github.com/opensource-together/opensource-together/issues"
   >
-    Bug reports and feature requests
+    Bugs and feature requests
+  </Card>
+  <Card
+    title="Discussions"
+    icon="comments"
+    href="https://github.com/opensource-together/opensource-together/discussions"
+  >
+    Questions and ideas
   </Card>
 </CardGroup>
 
-### Finding Good First Issues
-
-Look for issues labeled with:
-
-<CardGroup cols={2}>
-  <Card title="Good First Issue" icon="star">
-    Perfect for new contributors
-  </Card>
-  <Card title="Help Wanted" icon="hand-heart">
-    Community help needed
-  </Card>
-  <Card title="Documentation" icon="book">
-    Documentation improvements
-  </Card>
-  <Card title="Bug" icon="bug">
-    Bug fixes needed
-  </Card>
-</CardGroup>
+Looking for a place to start? Issues labelled **good first issue** and **help wanted** are
+scoped for newcomers.
 
 ## Code of Conduct
 
-We are committed to providing a welcoming and inclusive experience for everyone. Please read and follow our [Code of Conduct](https://github.com/opensource-together/opensource-together/blob/main/CODE_OF_CONDUCT.md).
-
-### Key Principles
-
-- **Be respectful** and inclusive
-- **Be constructive** in feedback
-- **Be collaborative** and supportive
-- **Be patient** with newcomers
-
-## Recognition
-
-We appreciate all contributions! Contributors will be recognized in:
-
-- GitHub contributors list
-- Release notes
-- Community highlights
-- Contributor badges
-
-## Questions?
-
-If you have any questions about contributing, please:
-
-1. Check our [FAQ](/contributing/faq)
-2. Search existing [GitHub Discussions](https://github.com/opensource-together/opensource-together/discussions)
-3. Join our [Discord community](https://discord.gg/opensource-together)
-4. Open a [GitHub Issue](https://github.com/opensource-together/opensource-together/issues)
-
-<CardGroup cols={2}>
-  <Card
-    title="Start Contributing"
-    icon="rocket"
-    href="https://github.com/opensource-together/opensource-together"
-  >
-    Fork the repository and start contributing
-  </Card>
-  <Card
-    title="Join Community"
-    icon="users"
-    href="https://discord.gg/opensource-together"
-  >
-    Connect with other contributors
-  </Card>
-</CardGroup>
+We're committed to a welcoming, harassment-free community. By participating you agree to the
+[Code of Conduct](https://github.com/opensource-together/opensource-together/blob/develop/CODE_OF_CONDUCT.md):
+be respectful, be constructive, be collaborative, and be patient with newcomers.

@@ -1,0 +1,143 @@
+---
+title: "Web App Overview"
+description: "What the OpenSource Together web app is, what it's built with, and how it's organised"
+---
+
+<img
+  className="block rounded-2xl"
+  src="https://framerusercontent.com/images/XzWoyspJB87XfypgRznhYJ14lo.png?scale-down-to=4096&width=4320&height=2352"
+  alt="Web App Overview"
+/>
+
+## Introduction
+
+The web app is the open-source part of OpenSource Together: a Next.js application covering
+project discovery, profiles, the contributor dashboard, and the Learn knowledge base. It's the
+repository you clone, and where nearly every contribution lands.
+
+It talks to a closed-source REST API, but it also ships a **complete local mock of that API**,
+so the whole app runs offline with no credentials.
+
+<Card title="Run it in two commands" icon="rocket" href="/quickstart" horizontal>
+  `pnpm install && pnpm dev:mock`
+</Card>
+
+## What it does
+
+<CardGroup cols={2}>
+  <Card title="Project discovery" icon="magnifying-glass">
+    Infinite-scrolling project grid with search, tech-stack and category filters, and sorting
+  </Card>
+  <Card title="Project creation" icon="folder-plus">
+    A guided multi-step flow to import a repository from GitHub or GitLab, or claim an existing
+    listing
+  </Card>
+  <Card title="Profiles" icon="user">
+    Contribution graph, pull requests, experiences, tech stacks, and pinned projects
+  </Card>
+  <Card title="Bookmarks & dashboard" icon="bookmark">
+    Save projects for later; manage the ones you own
+  </Card>
+  <Card title="Learn" icon="book-open">
+    A 26-chapter MDX knowledge base, statically generated
+  </Card>
+  <Card title="Authentication" icon="shield-check">
+    OAuth with GitHub and GitLab through better-auth, cookie-based sessions
+  </Card>
+</CardGroup>
+
+## Technology
+
+<AccordionGroup>
+  <Accordion title="Framework & runtime">
+    - **Next.js 15.5**: App Router, Turbopack in development
+    - **React 19.2**
+    - **TypeScript 5.9**: `strict: true`
+    - **Node 22+** and **pnpm 10** (enforced: `engines.node >= 22`)
+  </Accordion>
+  <Accordion title="Data & state">
+    - **TanStack Query v5**: all server state, with streaming hydration
+    - **Zustand v5**: client state (exactly one store: the project-creation wizard)
+    - **React Hook Form + Zod**: forms and validation
+  </Accordion>
+  <Accordion title="UI & styling">
+    - **Tailwind CSS v4**: CSS-first configuration, no `tailwind.config` file
+    - **shadcn/ui** (`new-york` style) on **Radix UI** primitives
+    - **Motion** for animation, **React Icons** for icons
+    - **Geist** and **Geist Mono** via `next/font`
+  </Accordion>
+  <Accordion title="Authentication">
+    - **better-auth 1.6**: client only; the server side lives in the private API
+    - GitHub and GitLab OAuth providers
+  </Accordion>
+  <Accordion title="Tooling">
+    - **Biome 2.4**: linting, formatting, and import organization in one tool
+    - **husky**: a pre-commit hook that auto-formats staged files
+    - **MSW** + Express: the local mock API
+  </Accordion>
+  <Accordion title="Build & delivery">
+    - **@opennextjs/cloudflare**: Cloudflare Workers bundle
+    - **Docker**: standalone Next.js output, published to GHCR
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  The project uses **Biome**, not ESLint and Prettier. `pnpm lint` checks lint rules,
+  formatting, and import order in a single pass; `pnpm lint:write` fixes what it can.
+</Note>
+
+## How the code is organised
+
+Code is grouped by **feature**, not by technical layer:
+
+```
+src/
+├── app/         # Next.js App Router: routes, layouts, metadata
+├── config/      # API base URL resolution
+├── features/    # auth · dashboard · profile · projects
+├── mocks/       # the local mock API
+├── shared/      # cross-feature components, hooks, lib, services, types
+└── middleware.ts
+```
+
+Each feature owns its own components, views, hooks, services, and types. Anything used by more
+than one feature moves to `src/shared/`.
+
+<Card title="Architecture guide" icon="sitemap" href="/web-app/architecture" horizontal>
+  The data layer, naming conventions, and how the pieces connect.
+</Card>
+
+## Things worth knowing up front
+
+<AccordionGroup>
+  <Accordion title="The app is light-mode only">
+    `next-themes` is a dependency, but no theme provider is mounted and the stylesheet defines
+    no dark token set. A handful of `dark:` utilities exist but aren't reachable. Don't assume
+    dark mode works when styling.
+  </Accordion>
+  <Accordion title="Server state never lives in Zustand">
+    Anything that comes from the API belongs to TanStack Query. Zustand holds exactly one
+    thing: the multi-step project-creation form state.
+  </Accordion>
+  <Accordion title="Automated testing is minimal">
+    One test file covers the mock API. There's no component, e2e, or visual testing. Lint,
+    types, and the builds are the safety net.
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Setup & scripts" icon="terminal" href="/web-app/quickstart">
+    Every script, environment variable, and tooling detail
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/web-app/architecture">
+    Conventions and the data layer
+  </Card>
+  <Card title="Features & routes" icon="puzzle-piece" href="/web-app/features">
+    What lives where, and every URL in the app
+  </Card>
+  <Card title="Mock API" icon="plug" href="/web-app/mock-api">
+    How local development works without a backend
+  </Card>
+</CardGroup>

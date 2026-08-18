@@ -1,0 +1,241 @@
+---
+title: "Development Guide"
+description: "Practical recipes for working in the OpenSource Together web app codebase"
+---
+
+## Before you start
+
+1. Get the app running: [Run the app locally](/quickstart)
+2. Skim the [architecture guide](/web-app/architecture), especially the data layer
+3. Find your feature in [Features & Routes](/web-app/features)
+
+## Where does my code go?
+
+| You're building… | It goes in… |
+| --- | --- |
+| A UI element used by one feature | `src/features/<feature>/components/` |
+| A UI element used by two or more features | `src/shared/components/ui/` |
+| The composition a route renders | `src/features/<feature>/views/` |
+| A call to the API | `src/features/<feature>/services/` |
+| A hook that reads data | `src/features/<feature>/hooks/*.queries.ts` |
+| A hook that writes data | `src/features/<feature>/hooks/*.mutations.ts` |
+| Form validation | `src/features/<feature>/validations/*.schema.ts` |
+
+Start inside a feature. Promote to `shared/` on the second use, not the first.
+
+## Recipe: add a new API call
+
+<Steps>
+<Step title="Add the service function">
+
+Services are plain async functions built on the shared client. Use `apiData` when the endpoint
+returns a single resource, `apiRequest` when you need the pagination envelope too.
+
+```typescript
+// src/features/projects/services/project.service.ts
+export function getProjectContributors(
+  projectId: string,
+  params?: PaginationParams,
+  context: ApiRequestContext = {}
+): Promise<PaginatedResponse<Contributor>> {
+  return apiRequest<PaginatedResponse<Contributor>>(
+    withQueryParams(`/projects/${projectId}/contributors`, params),
+    context
+  );
+}
+```
+
+Always accept and forward `context`. It carries the abort signal and, server-side, cookies.
+
+</Step>
+
+<Step title="Add a query key">
+
+```typescript
+// src/features/projects/hooks/project.keys.ts
+export const projectKeys = {
+  // …existing keys
+  contributors: (projectId: string) =>
+    [...projectKeys.detail(projectId), "contributors"] as const,
+};
+```
+
+Nesting under `detail(projectId)` means invalidating the project also invalidates its
+contributors.
+
+</Step>
+
+<Step title="Add the hook">
+
+```typescript
+// src/features/projects/hooks/project.queries.ts
+export function useProjectContributorsQuery(projectId: string) {
+  return useQuery({
+    queryKey: projectKeys.contributors(projectId),
+    queryFn: ({ signal }) => getProjectContributors(projectId, {}, { signal }),
+    enabled: !!projectId,
+  });
+}
+```
+
+</Step>
+
+<Step title="Use it in a component">
+
+```tsx
+const { data, isPending, error } = useProjectContributorsQuery(projectId);
+```
+
+Components call hooks. They never call services or `fetch` directly.
+
+</Step>
+
+<Step title="Mock the endpoint">
+
+Local development will return 501 until the mock knows the route. See
+[the Mock API guide](/web-app/mock-api).
+
+</Step>
+</Steps>
+
+## Recipe: add a mutation
+
+```typescript
+// src/features/projects/hooks/project.mutations.ts
+export function useBookmarkProjectMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: projectMutationKeys.bookmark(),
+    mutationFn: (projectId: string) => addProjectBookmark(projectId),
+    onSuccess: (_data, projectId) => {
+      queryClient.invalidateQueries({
+        queryKey: projectKeys.detail(projectId),
+      });
+      queryClient.invalidateQueries({ queryKey: profileKeys.bookmarks() });
+    },
+  });
+}
+```
+
+Invalidate everything the write affected, including keys owned by other features, as here
+where bookmarking a project changes the profile's bookmark list.
+
+Surface failures to the user with `getErrorMessage()` from `src/shared/lib/get-error-message.ts`
+and a `sonner` toast, which is the pattern the rest of the app follows.
+
+## Recipe: add a page
+
+<Steps>
+<Step title="Create the route">
+
+```tsx
+// src/app/projects/[projectId]/contributors/page.tsx
+export default async function ContributorsPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+  return <ContributorsView projectId={projectId} />;
+}
+```
+
+Keep route files thin: resolve params, render a view.
+
+</Step>
+
+<Step title="Create the view">
+
+The view is a client component in the feature that calls the hooks and composes components:
+`src/features/projects/views/contributors.view.tsx`.
+
+</Step>
+
+<Step title="Protect it if needed">
+
+Add the path to the protected list in `src/middleware.ts`, and to the disallow list in
+`src/app/robots.ts` if it shouldn't be indexed.
+
+</Step>
+</Steps>
+
+## Recipe: add a UI component
+
+Check `src/shared/components/ui/` first. There are already 60-odd components covering uploads,
+comboboxes, cards, tables, pagination, and markdown rendering.
+
+For a new shadcn primitive:
+
+```bash
+pnpm dlx shadcn@latest add <component>
+```
+
+Compose classes with `cn()`, and use design tokens rather than raw colours:
+
+```tsx
+import { cn } from "@/shared/lib/utils";
+
+<div className={cn("rounded-lg border bg-card p-4", className)} />;
+```
+
+New design tokens go in `src/app/globals.css`. There is no `tailwind.config.js`.
+
+## Style rules that will fail your build
+
+Biome runs in CI, and a few rules surprise people:
+
+<AccordionGroup>
+  <Accordion title="TypeScript `enum` is banned (noEnum)">
+    Use a union type or a `const` object:
+
+    ```typescript
+    // ✗ fails lint
+    enum Provider { GitHub = "github", GitLab = "gitlab" }
+
+    // ✓
+    export type AuthProvider = "github" | "gitlab";
+
+    // ✓ when you need the values at runtime
+    export const PROVIDERS = { gitHub: "github", gitLab: "gitlab" } as const;
+    ```
+
+  </Accordion>
+  <Accordion title="Formatting is enforced, not suggested">
+    80-column lines, 2-space indent, double quotes, ES5 trailing commas, semicolons always.
+    `pnpm lint` fails on drift. Run `pnpm lint:write`.
+  </Accordion>
+  <Accordion title="Import order is enforced">
+    Biome's `organizeImports` assist sorts imports. Don't reorder them by hand; let
+    `pnpm lint:write` do it.
+  </Accordion>
+  <Accordion title="Other rules at error level">
+    `noInferrableTypes`, `noParameterAssign`, `noUselessElse`, `useAsConstAssertion`,
+    `useDefaultParameterLast`, `useSingleVarDeclarator`, `useNumberNamespace`.
+
+    `noUnusedVariables` and `useExhaustiveDependencies` are warnings. They won't fail CI, but
+    fix them anyway.
+
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Several accessibility rules are disabled project-wide. Lint passing does **not** mean your
+  component is accessible. Check keyboard navigation and labelling yourself.
+</Note>
+
+## Before you push
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm test:mock
+pnpm build
+pnpm worker:build
+```
+
+That's exactly what CI runs. The last two catch build-time errors that `type-check` won't.
+
+<Card title="Contribution workflow" icon="code-branch" href="/contributing/contributing" horizontal>
+  Branches, commits, and opening the pull request.
+</Card>

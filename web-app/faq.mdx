@@ -1,0 +1,194 @@
+---
+title: "Web App FAQ"
+description: "Common questions about developing the OpenSource Together web app"
+---
+
+## Getting started
+
+<AccordionGroup>
+  <Accordion title="Can I work on this without access to the backend?">
+    Yes. That's the intended workflow. The API is closed source, so the repository ships a
+    complete local mock of it:
+
+    ```bash
+    pnpm dev:mock
+    ```
+
+    No `.env`, no database, no Docker, no OAuth app. See [the Mock API
+    guide](/web-app/mock-api).
+
+  </Accordion>
+
+  <Accordion title="Do I need to copy .env.example?">
+    Not for `pnpm dev:mock`. It sets every variable it needs inline. You only need a `.env`
+    for the optional feature-request webhook or S3 metadata assets.
+  </Accordion>
+
+  <Accordion title="How do I test signed-in and signed-out states?">
+    You start signed in. Use the **Mock mode** button in the bottom-left corner to toggle
+    between *Signed in* and *Signed out*. It sets the same cookie the middleware checks, so
+    protected routes behave exactly as they would in production.
+  </Accordion>
+
+  <Accordion title="A request returned 501. Is something broken?">
+    No. The mock API returns `501` for routes it doesn't handle yet, and logs
+    `[mock-api] UNHANDLED <method> <path>`. Adding the missing handler is a welcome
+    contribution: see [adding a handler](/web-app/mock-api).
+  </Accordion>
+
+  <Accordion title="My data disappeared after restarting">
+    Expected. Mock state is in-memory and resets on every restart so everyone starts from the
+    same fixtures.
+  </Accordion>
+</AccordionGroup>
+
+## Architecture
+
+<AccordionGroup>
+  <Accordion title="Why feature-based rather than layer-based?">
+    Related code stays together: a change to bookmarks touches one folder instead of five.
+    It also makes ownership obvious and keeps features from quietly reaching into each other.
+  </Accordion>
+
+  <Accordion title="Where do I put an API call?">
+    Three files, in order:
+
+    1. `services/*.service.ts`: the function that talks to the API
+    2. `hooks/*.keys.ts`: the query key
+    3. `hooks/*.queries.ts` or `*.mutations.ts`: the hook components use
+
+    Components never call `fetch` or a service directly. There's a full walkthrough in the
+    [development guide](/web-app/development).
+
+  </Accordion>
+
+  <Accordion title="When do I use Zustand instead of TanStack Query?">
+    - **TanStack Query**: anything that came from the API. Nearly everything.
+    - **Zustand**: state the server doesn't own. Today that's exactly one store: the
+      multi-step project-creation wizard.
+
+    Never copy API data into Zustand; it goes stale immediately. For state that's local to one
+    component, plain `useState` is right, and for derived values use `useMemo`.
+
+  </Accordion>
+
+  <Accordion title="Why don't I see prefetchQuery or HydrationBoundary anywhere?">
+    The app uses **streaming hydration** via `ReactQueryStreamedHydration`. Server components
+    render client views that call `useQuery`, and results stream to the browser. There is no
+    `prefetchQuery`, no `HydrationBoundary`, and no `useSuspenseQuery` in the codebase. Follow
+    the existing pattern rather than introducing a second one.
+  </Accordion>
+
+  <Accordion title="Can I write a query key inline?">
+    No. Always use the factory in the feature's `*.keys.ts`. An inline key like
+    `["projects", id]` won't match `projectKeys.detail(id)`, so mutations won't invalidate it
+    and you'll ship a stale-cache bug.
+  </Accordion>
+</AccordionGroup>
+
+## Conventions
+
+<AccordionGroup>
+  <Accordion title="What are the file naming conventions?">
+    Kebab-case with a suffix describing the file's role: `.component.tsx`, `.view.tsx`,
+    `.form.tsx`, `.service.ts`, `.keys.ts`, `.queries.ts`, `.mutations.ts`, `.hook.ts`,
+    `.store.ts`, `.schema.ts`, `.type.ts`, `.mock.ts`.
+
+    The codebase isn't perfectly uniform. Shadcn-generated files in
+    `src/shared/components/ui/` are mostly bare kebab-case, some feature hooks skip `.hook.ts`,
+    and one file is PascalCase. Follow the convention for new files; don't rename existing ones
+    as a drive-by.
+
+  </Accordion>
+
+  <Accordion title="How are imports organized?">
+    By **Biome**, not Prettier. The `organizeImports` assist sorts them, `pnpm lint` fails if
+    they drift, and `pnpm lint:write` fixes it. Don't reorder imports by hand.
+  </Accordion>
+
+  <Accordion title="Why did my commit contain changes I didn't make?">
+    A husky `pre-commit` hook runs Biome with `--write` on staged files and restages the
+    result. Formatting fixes therefore land in your commit automatically. The commit only fails
+    if Biome finds something it can't fix.
+  </Accordion>
+
+  <Accordion title="Why does lint reject my enum?">
+    `noEnum` is on. Use a union type (`type AuthProvider = "github" | "gitlab"`) or a `const`
+    object with `as const` when you need the values at runtime.
+  </Accordion>
+
+  <Accordion title="Where do I change a colour or spacing token?">
+    In `src/app/globals.css`. Tailwind v4 is configured in CSS. There is no
+    `tailwind.config.js`, and creating one has no effect.
+  </Accordion>
+</AccordionGroup>
+
+## Testing and quality
+
+<AccordionGroup>
+  <Accordion title="How do I run the tests?">
+    ```bash
+    pnpm test:mock
+    ```
+
+    That's the whole suite: one file, `src/mocks/handlers.mock.test.ts`, covering mock API
+    behaviour and fixture invariants.
+
+  </Accordion>
+
+  <Accordion title="Is there component or end-to-end testing?">
+    No. There's no component, integration, e2e, or visual regression testing today. Lint,
+    types, and the two builds are the safety net, which is why running all five CI commands
+    before pushing matters, and why screenshots on visual pull requests genuinely help
+    reviewers.
+  </Accordion>
+
+  <Accordion title="What exactly does CI check?">
+    ```bash
+    pnpm i --frozen-lockfile
+    pnpm lint
+    pnpm type-check
+    pnpm test:mock
+    pnpm build
+    pnpm worker:build
+    ```
+
+    `--frozen-lockfile` means a stale `pnpm-lock.yaml` fails the build. Commit the lockfile
+    when you change dependencies.
+
+  </Accordion>
+</AccordionGroup>
+
+## Other questions
+
+<AccordionGroup>
+  <Accordion title="Is there dark mode?">
+    Not currently. `next-themes` is installed, but no theme provider is mounted and the
+    stylesheet defines no dark token set. A few `dark:` utilities exist but aren't reachable.
+    Don't rely on them when styling.
+  </Accordion>
+
+  <Accordion title="Which branch do I target?">
+    `develop`. It's the default branch; `main` is the release branch.
+  </Accordion>
+
+  <Accordion title="Why does /projects 404?">
+    There is no `/projects` index route. Project discovery lives on `/`. Individual projects
+    are at `/projects/<projectId>`.
+  </Accordion>
+
+  <Accordion title="The dashboard sidebar has greyed-out links">
+    Analytics, Chat, and Invitations are placeholders for routes that don't exist yet. They're
+    intentionally disabled, not broken.
+  </Accordion>
+
+  <Accordion title="Where is the better-auth server configuration?">
+    In the API, not here. This repository contains only the better-auth **client**
+    (`src/shared/lib/auth-client.ts`). Route protection is done by cookie presence in
+    `src/middleware.ts`, and `GET /users/me` is the app's real session source of truth.
+  </Accordion>
+</AccordionGroup>
+
+<Card title="Still stuck?" icon="discord" href="https://discord.com/invite/4ZDhm3dQAC" horizontal>
+  Ask in Discord. It's the fastest way to reach the team.
+</Card>

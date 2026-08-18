@@ -1,55 +1,73 @@
 # OpenSource Together Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+The documentation site for [OpenSource Together](https://opensource-together.com), built with
+[Mintlify](https://mintlify.com).
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+It covers the open-source **web app**, the **API reference**, and the **AI Engine**, and is
+aimed at contributors.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+## Run it locally
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+Install the Mintlify CLI (requires Node 19+):
 
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
+```bash
 npm i -g mint
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Then, from the repository root where `docs.json` lives:
 
-```
+```bash
 mint dev
 ```
 
-View your local preview at `http://localhost:3000`.
+The preview runs at [http://localhost:3000](http://localhost:3000).
 
-## API Reference Generation
+## Structure
 
-The API reference is generated from the OpenAPI specification in the `api-reference/openapi.json` file.
 
-To generate the API reference, run the following command:
+| Path                                             | Contents                                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `docs.json`                                      | Navigation, theme, and site configuration. New pages must be registered here |
+| `index.mdx`, `quickstart.mdx`, `development.mdx` | The Guides tab                                                                |
+| `contributing/`                                  | Contribution, Learn-content, and deployment guides                            |
+| `web-app/`                                       | Web app architecture, features, mock API, and development guides              |
+| `api-reference/`                                 | Generated API reference (see below)                                           |
+| `ai/`                                            | AI Engine documentation                                                       |
+| `images/`, `logo/`                               | Static assets                                                                 |
 
-```
+
+A page that isn't listed in `docs.json` won't appear in the navigation.
+
+## Updating the API reference
+
+The API reference is generated from the API's live Swagger output. **Never edit**
+`api-reference/openapi.json` **or the endpoint pages by hand.**
+
+```bash
+curl -s https://api.opensource-together.com/api-docs-json | python3 -m json.tool --indent 2 > api-reference/openapi.json
+
 npx @mintlify/scraping@latest openapi-file api-reference/openapi.json -o api-reference/endpoint
 ```
 
-## Publishing changes
+Then register any newly generated page in the `API Reference` tab in `docs.json`. The scraper
+writes files but does not update navigation.
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+Note that better-auth's `/api/auth/*` routes are absent from the specification (the API's
+generator doesn't see them) and are documented by hand in `api-reference/introduction.mdx`.
 
-## Need help?
+## Before opening a pull request
 
-### Troubleshooting
+```bash
+mint broken-links
+```
 
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
 
-### Resources
 
-- [Mintlify documentation](https://mintlify.com/docs)
-- [Mintlify community](https://mintlify.com/community)
+## Publishing
+
+Changes merged to the default branch deploy automatically via the Mintlify GitHub app.
+
+## Contributing
+
+See [Contribute to the docs](https://docs.opensource-together.com/development), or open an
+issue if something here is wrong or unclear.

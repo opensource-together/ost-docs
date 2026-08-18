@@ -1,14 +1,17 @@
 ---
-title: "Development"
-description: "Preview changes locally to update your docs"
+title: "Contribute to the docs"
+description: "Run this documentation site locally, and keep the API reference in sync"
 ---
 
-<Info>
-  **Prerequisites**: - Node.js version 19 or higher - A docs repository with a
-  `docs.json` file
-</Info>
+These pages live in the [`ost-docs`](https://github.com/opensource-together) repository and are
+built with [Mintlify](https://mintlify.com). Fixing a confusing paragraph is a perfectly good
+first contribution.
 
-Follow these steps to install and run Mintlify on your operating system.
+## Run the docs locally
+
+<Info>
+  **Prerequisites:** Node.js 19 or higher.
+</Info>
 
 <Steps>
 <Step title="Install the Mintlify CLI">
@@ -19,52 +22,117 @@ npm i -g mint
 
 </Step>
 
-<Step title="Preview locally">
+<Step title="Preview">
 
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
+From the repository root, where `docs.json` lives:
 
 ```bash
 mint dev
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
+Your local preview runs at [http://localhost:3000](http://localhost:3000).
 
 </Step>
 </Steps>
 
-## Custom ports
-
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
+To use a different port:
 
 ```bash
 mint dev --port 3333
 ```
 
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
+## How the site is organised
 
-```md
-Port 3000 is already in use. Trying 3001 instead.
-```
+| Path | Contents |
+| --- | --- |
+| `docs.json` | Navigation, theme, and site configuration. New pages must be registered here |
+| `index.mdx`, `quickstart.mdx` | The Guides tab entry points |
+| `contributing/` | Contribution, Learn-content, and deployment guides |
+| `web-app/` | Web app architecture, features, and development guides |
+| `api-reference/` | The generated API reference (see below) |
+| `ai/` | AI Engine documentation |
+| `images/`, `logo/` | Static assets |
 
-## Mintlify versions
+A page that isn't listed in `docs.json` won't appear in the navigation, even if the file
+exists.
 
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
+## Updating the API reference
+
+The API reference is generated. **Never edit `api-reference/openapi.json` or the endpoint
+pages by hand.** The source of truth is the API's own Swagger output.
 
 ```bash
-npm mint update
+curl -s https://api.opensource-together.com/api-docs-json | python3 -m json.tool --indent 2 > api-reference/openapi.json
 ```
 
-## Validating links
+Then regenerate the endpoint pages:
 
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
+```bash
+npx @mintlify/scraping@latest openapi-file api-reference/openapi.json -o api-reference/endpoint
+```
+
+Each endpoint page is a three-line stub that points Mintlify at an operation in the spec:
+
+```mdx
+---
+openapi: get /users/me/bookmarks
+---
+```
+
+Finally, register any newly generated page in the `API Reference` tab in `docs.json`. The
+scraper writes files but doesn't touch navigation.
+
+<Note>
+  `/api/auth/*` (better-auth) is deliberately absent from the specification. The API's
+  generator doesn't see those routes. They're documented by hand in
+  [the API introduction](/api-reference/introduction), so keep that page in mind when auth
+  changes.
+</Note>
+
+## Before you open a pull request
+
+Check that nothing links into a void:
 
 ```bash
 mint broken-links
 ```
 
+## Writing conventions
+
+- Prefer showing the real command or file path over describing it.
+- Don't document intentions. If the code doesn't do it yet, don't write it down.
+- When a convention has exceptions in the codebase, say so; contributors will find them anyway.
+- Use `<Note>`, `<Warning>` and `<Info>` for genuine caveats, not for emphasis.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
+
+    Usually an outdated Node version:
+    1. `npm remove -g mint`
+    2. Upgrade to Node 19 or higher.
+    3. `npm i -g mint`
+
+  </Accordion>
+
+  <Accordion title="A page loads as a 404">
+
+    Make sure you're running `mint dev` from the folder containing `docs.json`, and that the
+    page is registered in the navigation.
+
+  </Accordion>
+
+  <Accordion title="Unknown error">
+
+    Delete the `~/.mintlify` folder and run `mint dev` again.
+
+  </Accordion>
+</AccordionGroup>
+
 ## Deployment
 
-If the deployment is successful, you should see the following:
+Changes merged to the default branch deploy automatically through the Mintlify GitHub app.
 
 <Frame>
   <img
@@ -73,27 +141,3 @@ If the deployment is successful, you should see the following:
     style={{ borderRadius: "0.5rem" }}
   />
 </Frame>
-
-## Code formatting
-
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
-
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
-
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-
-  </Accordion>
-
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
-
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).

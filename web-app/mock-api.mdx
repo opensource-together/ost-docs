@@ -1,0 +1,157 @@
+---
+title: "The Mock API"
+description: "How local development works without a backend, and how to extend the mock when your feature needs a new endpoint"
+---
+
+## Why it exists
+
+The OpenSource Together API is a closed-source service. Rather than making contributors ask for
+credentials, the web app ships a **local mock of the entire API contract**, seeded with
+realistic data.
+
+```bash
+pnpm dev:mock
+```
+
+That's the whole setup: no `.env`, no database, no Docker, no OAuth app.
+
+<Note>
+  This is **not** the browser service-worker flavour of MSW. It's a real HTTP server: an
+  Express app serving [MSW](https://mswjs.io/) handlers on port `4000`, so server components,
+  `generateMetadata`, and the sitemap hit it too, exactly like the real API.
+</Note>
+
+## The files
+
+Everything lives in `src/mocks/`:
+
+| File | Role |
+| --- | --- |
+| `api.mock.ts` | The Express entry point: CORS, the session cookie middleware, the 501 fallback |
+| `handlers.mock.ts` | All 27 route handlers and the response helpers |
+| `db.mock.ts` | Mutable in-memory state (projects, users, bookmarks) with a `reset()` |
+| `session.mock.ts` | Cookie-based fake session, shared by server and client |
+| `uploads.mock.ts` | In-memory image uploads, served back from `/mock-uploads/:id` |
+| `provider.mock.tsx` | The floating **Mock mode** toggle button |
+| `fixtures/` | Seed data: projects, users, pull requests, taxonomy |
+| `handlers.mock.test.ts` | The test suite (`pnpm test:mock`) |
+
+## Sessions without OAuth
+
+The mock issues the same cookie name the real API uses (`better-auth.session_token`), which is
+exactly what `src/middleware.ts` checks for. That's why protected routes work with no OAuth
+flow at all.
+
+You start **signed in**. To test signed-out states, use the **Mock mode** button in the
+bottom-left corner of the page. It toggles a `mock_signed_out` cookie and reloads.
+
+<Card title="Try it" icon="hand-pointer" horizontal>
+  Toggle to *Signed out*, then visit `/dashboard/my-projects`. You should be redirected to
+  the login page with a `redirectTo` parameter.
+</Card>
+
+## Seeded state
+
+`db.mock.ts` clones the fixtures at boot and arranges a few things so every flow is reachable:
+
+- three projects are owned by the mock user, so the dashboard isn't empty
+- one project has no owner, so **claiming** can be tested
+- one project is bookmarked, so the bookmarks list isn't empty
+- uploaded images are kept in memory and served from `/mock-uploads/:id`
+
+<Warning>
+  All of this is per-process and in-memory. Restarting `pnpm dev:mock` resets everything,
+  intentionally, so every contributor and every test run starts from identical state.
+</Warning>
+
+## Adding a handler
+
+When you build a feature that calls an endpoint the mock doesn't cover, the request returns
+**501** and the terminal logs:
+
+```
+[mock-api] UNHANDLED GET /projects/pjt_123/contributors
+```
+
+That's your cue. Add the handler in `src/mocks/handlers.mock.ts`.
+
+### Response helpers
+
+Use the helpers. They produce the exact envelopes the real API returns, which is what the
+`apiData()` client expects.
+
+| Helper | Produces |
+| --- | --- |
+| `ok(data, status?)` | `{ data, timestamp }` |
+| `paginated(items, page, size)` | `{ data, pagination: { total, lastPage, currentPage, size }, timestamp }` |
+| `fail(status, error)` | `{ error, statusCode, timestamp }` |
+| `invalid(errors)` | `{ errors: [{ field, message }], statusCode: 400, timestamp }` |
+| `unauthorized()` | A 401 via `fail` |
+
+### An example
+
+```typescript
+// src/mocks/handlers.mock.ts
+http.get(api("/projects/:id/contributors"), ({ params, request }) => {
+  if (!isAuthenticated(request)) return unauthorized();
+
+  const project = db.projects.find(String(params.id));
+  if (!project) return fail(404, "Project not found");
+
+  const { page, size } = pagination(new URL(request.url));
+  return paginated(project.contributors ?? [], page, size);
+});
+```
+
+Two details that matter:
+
+- **`api(path)`** wraps the path as `*${path}` so the handler matches regardless of host. Always
+  use it.
+- **Check auth first.** If the real endpoint is guarded, the mock should be too. Otherwise
+  you'll build a flow that breaks in production.
+
+<Warning>
+  Match the real contract, not what's convenient. Check the
+  [API Reference](/api-reference/introduction) for the actual response shape and status codes
+  before writing the handler. A mock that returns a different shape hides a bug rather than
+  preventing one.
+</Warning>
+
+### Add seed data if you need it
+
+New fields go in `src/mocks/fixtures/`. Project data lives in
+`fixtures/projects.mock.json`, which is large. Biome deliberately skips formatting it.
+
+### Add a test
+
+If you change mock behaviour or state, add a case to `src/mocks/handlers.mock.test.ts`:
+
+```bash
+pnpm test:mock
+```
+
+The suite runs the handlers through `msw/node` with `onUnhandledRequest: "error"`, and resets
+the database before each test.
+
+## Deliberate gaps
+
+Some things aren't reproduced locally, on purpose:
+
+| Not mocked | Why, and what happens instead |
+| --- | --- |
+| OAuth redirects | Replaced by the Mock mode toggle |
+| Real file storage | Uploads return stable placeholder URLs served from memory |
+| `GET /health` | Nothing in the web app calls it |
+
+There's also one route that exists **only** in the mock: `GET /mock-uploads/:id`, which serves
+uploaded bytes back. Don't build against it. It doesn't exist in the real API.
+
+## Extending it is a contribution
+
+The mock is deliberately incomplete: handlers are added when a feature needs them. If you
+hit a 501, adding the handler *is* a welcome pull request. The server even says so in its own
+error message.
+
+<Card title="Contribution workflow" icon="code-branch" href="/contributing/contributing" horizontal>
+  Branches, commits, and what CI checks.
+</Card>

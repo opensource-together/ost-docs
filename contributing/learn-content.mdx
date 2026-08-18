@@ -1,0 +1,133 @@
+---
+title: "Writing Learn content"
+description: "Contribute a chapter to the OpenSource Together Learn knowledge base. MDX only, no TypeScript required"
+---
+
+## What Learn is
+
+`/learn` is a knowledge base about getting started in open source, published on the site as
+**26 chapters across two tracks**:
+
+| Track | Folder | Chapters | What it covers |
+| --- | --- | --- | --- |
+| **Learn** | `content/learn/` | 13 | Concepts: how open source works, licensing, governance, documentation, careers |
+| **Hands-on** | `content/hands-on/` | 13 | Practice: finding a project, opening your first PR, maintaining your own |
+
+Chapters are plain MDX files at the **repository root**, not inside `src/`. Contributing one
+needs no TypeScript and no React. If you can write Markdown, you can contribute here.
+
+<Card title="Read the tracks" icon="book-open" href="https://opensource-together.com/learn" horizontal>
+  See what's already published before writing something new.
+</Card>
+
+## Editing an existing chapter
+
+Find the file by its slug and edit it. The URL `/learn/getting-started` maps to
+`content/learn/getting-started.mdx`.
+
+```bash
+pnpm dev:mock
+# then open http://localhost:3000/learn/getting-started
+```
+
+Chapter pages are statically generated, so a change shows up on reload in dev.
+
+## Adding a new chapter
+
+<Steps>
+  <Step title="Create the MDX file">
+    Add it to `content/learn/` or `content/hands-on/`, named after its slug:
+
+    ```bash
+    content/learn/your-chapter-slug.mdx
+    ```
+
+  </Step>
+  <Step title="Write the frontmatter">
+    Two fields, both quoted:
+
+    ```mdx
+    ---
+    title: "Chapter 14: Your Chapter Title"
+    description: "One or two sentences summarising what the chapter teaches."
+    ---
+
+    Your content starts here.
+    ```
+
+  </Step>
+  <Step title="Register it in the index">
+    A file on disk is not enough. The chapter must be listed in `content/chapters.ts`, in
+    `learnChapters` or `handsOnChapters`:
+
+    ```ts
+    {
+      slug: "your-chapter-slug",
+      title: "Chapter 14: Your Chapter Title",
+      order: 14,
+    },
+    ```
+
+    `order` drives both the listing order and the previous/next navigation at the bottom of
+    each chapter. `description` is optional here. The page reads it from the MDX frontmatter.
+
+  </Step>
+  <Step title="Check it renders">
+    ```bash
+    pnpm dev:mock
+    ```
+
+    Visit `/learn`, `/learn/chapters`, and your chapter's own URL.
+
+  </Step>
+</Steps>
+
+<Warning>
+  **Slugs are shared across both tracks.** The page resolver looks in `content/learn/` first
+  and falls back to `content/hands-on/`, so a file with the same name in both folders means the
+  hands-on one is unreachable. Pick a slug that isn't already used in either directory.
+</Warning>
+
+## What you can use in a chapter
+
+Content is rendered with `react-markdown` plus GitHub Flavored Markdown and raw HTML support,
+with syntax highlighting for code blocks. In practice: headings, lists, tables, links, images,
+blockquotes, inline and fenced code all work.
+
+Headings become entries in the table of contents shown beside the chapter, so structure your
+chapter with `##` and `###` rather than bold paragraphs.
+
+<Note>
+  Despite the `.mdx` extension, chapters are parsed as Markdown with hand-read frontmatter.
+  they are not compiled MDX modules. Don't add `import` statements or JSX components; they
+  won't execute.
+</Note>
+
+## Before you open the pull request
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm build
+```
+
+`pnpm build` matters here: chapters are prerendered at build time with
+`generateStaticParams`, and `dynamicParams` is disabled, so a chapter registered in
+`chapters.ts` without a matching file (or the reverse) is caught by the build, not at runtime.
+
+<Info>
+  For deployment, `pnpm worker:build` runs `scripts/copy-learn-html.js`, which copies the
+  prerendered chapter HTML into the Cloudflare Workers asset bundle. You don't need to run it
+  locally, but it's why the build step can't be skipped.
+</Info>
+
+## Style
+
+- Write for someone making their first contribution, not for a maintainer.
+- Prefer concrete examples over abstract advice.
+- Keep chapters roughly the length of the existing ones (3–5 KB of prose).
+- Link to real projects and real documentation rather than paraphrasing them.
+
+<Card title="Back to contributing" icon="code-branch" href="/contributing/contributing" horizontal>
+  Branches, commits, and the pull request process.
+</Card>
