@@ -1,10 +1,7 @@
 # OpenSource Together Documentation
 
-The documentation site for [OpenSource Together](https://opensource-together.com), built with
+The documentation site for [OpenSource Together](https://opensource-together.com), powered by
 [Mintlify](https://mintlify.com).
-
-It covers the open-source **web app**, the **API reference**, and the **AI Engine**, and is
-aimed at contributors.
 
 ## Run it locally
 
@@ -22,22 +19,6 @@ mint dev
 
 The preview runs at [http://localhost:3000](http://localhost:3000).
 
-## Structure
-
-
-| Path                                             | Contents                                                                      |
-| ------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `docs.json`                                      | Navigation, theme, and site configuration. New pages must be registered here |
-| `index.mdx`, `quickstart.mdx`, `development.mdx` | The Guides tab                                                                |
-| `contributing/`                                  | Contribution, Learn-content, and deployment guides                            |
-| `web-app/`                                       | Web app architecture, features, mock API, and development guides              |
-| `api-reference/`                                 | Generated API reference (see below)                                           |
-| `ai/`                                            | AI Engine documentation                                                       |
-| `images/`, `logo/`                               | Static assets                                                                 |
-
-
-A page that isn't listed in `docs.json` won't appear in the navigation.
-
 ## Updating the API reference
 
 The API reference is generated from the API's live Swagger output. **Never edit**
@@ -52,16 +33,11 @@ npx @mintlify/scraping@latest openapi-file api-reference/openapi.json -o api-ref
 Then register any newly generated page in the `API Reference` tab in `docs.json`. The scraper
 writes files but does not update navigation.
 
-Note that better-auth's `/api/auth/*` routes are absent from the specification (the API's
-generator doesn't see them) and are documented by hand in `api-reference/introduction.mdx`.
-
 ## Before opening a pull request
 
 ```bash
 mint broken-links
 ```
-
-
 
 ## Publishing
 
