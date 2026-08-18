@@ -2,6 +2,11 @@ html {
   scroll-behavior: smooth;
 }
 
+img.nav-logo {
+  height: 20px;
+  width: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

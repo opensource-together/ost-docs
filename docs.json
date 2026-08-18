@@ -7,10 +7,10 @@
     "light": "#8ec5ff",
     "dark": "#000000"
   },
-  "favicon": "/favicon.ico",
+  "favicon": "/public/favicon.ico",
   "logo": {
-    "light": "/logo/ostogether-logo.svg",
-    "dark": "/logo/ostogether-logo-dark.svg"
+    "light": "/public/logo/ost-logo.svg",
+    "dark": "/public/logo/ost-logo-dark.svg"
   },
 
   "navigation": {
