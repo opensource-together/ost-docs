@@ -64,7 +64,7 @@ Components never call `fetch`. Services never call `useQuery`.
 
 ### 1. The API client
 
-`src/shared/lib/api-client.ts` is the single place a network request is made. It exports:
+`src/shared/lib/api-client.ts` is the wrapper every feature calls through. It exports:
 
 | Export | Purpose |
 | --- | --- |
@@ -112,8 +112,8 @@ lets queries pass an abort signal and lets server components forward cookies.
 
 ### 3. Query keys
 
-Every feature has a `*.keys.ts` file exporting hierarchical key factories. This is what makes
-targeted cache invalidation possible.
+Features that fetch data have a `*.keys.ts` file exporting hierarchical key factories. This is
+what makes targeted cache invalidation possible.
 
 ```typescript
 // src/features/projects/hooks/project.keys.ts
@@ -160,7 +160,7 @@ export function useProjectQuery(projectId: string) {
 ```
 
 Note `{ signal }` being forwarded into the service. TanStack Query aborts in-flight requests
-when a component unmounts, and every service supports it.
+when a component unmounts, and every read service accepts it.
 
 Mutations use a key from `*MutationKeys` and invalidate what they changed:
 
@@ -227,7 +227,7 @@ For **authenticated** server-side reads, cookies must be forwarded explicitly:
 ```typescript
 // src/shared/lib/server-api-context.ts ("server-only")
 const context = await getServerApiContext(); // { headers: { cookie } }
-const profile = await getUserById(userId, context);
+const profile = await getUser(userId, context);
 ```
 
 Server-side requests resolve their base URL from `INTERNAL_SERVER_API_URL`, which is what lets
@@ -247,8 +247,8 @@ better-auth runs on the **API**, not here. This repository contains only the cli
 ### Route protection
 
 `src/middleware.ts` guards `/profile/me`, `/projects/create`, `/projects/:id/edit`,
-`/onboarding`, and `/dashboard`. It checks only for the **presence** of a cookie starting with
-`better-auth.session`. No token validation, no API call. Unauthenticated visitors are sent to
+`/onboarding`, and `/dashboard`. It checks only for the **presence** of a better-auth session
+cookie. No token validation, no API call. Unauthenticated visitors are sent to
 `/auth/login?redirectTo=…`.
 
 <Note>
@@ -296,8 +296,8 @@ Files are kebab-case with a suffix that says what they are:
 Tailwind v4, configured entirely in CSS at `src/app/globals.css`:
 
 - `@theme inline { … }` maps design tokens to utility classes
-- `:root { … }` holds the raw values in `oklch()`, including the brand ramp
-  `--ost-blue-one` → `--ost-blue-four` and semantic tokens like `--destructive` and `--success`
+- `:root { … }` holds the raw values, including the brand ramp `--ost-blue-one` →
+  `--ost-blue-four` and semantic tokens like `--destructive` and `--success`
 - `@layer base` sets border, ring, selection, and heading defaults
 
 There is **no `tailwind.config.js`**. Adding one has no effect.

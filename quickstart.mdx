@@ -95,13 +95,11 @@ page. It flips between *Signed in* and *Signed out* and reloads.
 
 <AccordionGroup>
   <Accordion title="Port 3000 or 4000 is already in use">
-    Both ports are fixed by `dev:mock`. Free them, or run the two processes yourself with
-    different values:
+    If **3000** is taken, Next.js just picks the next free port and tells you which one in the
+    terminal. Nothing to do.
 
-    ```bash
-    MOCK_API_PORT=4100 pnpm exec tsx src/mocks/api.mock.ts
-    NEXT_PUBLIC_API_URL=http://localhost:4100 INTERNAL_SERVER_API_URL=http://localhost:4100 pnpm dev
-    ```
+    If **4000** is taken, the mock API can't start. Free that port and run `pnpm dev:mock`
+    again.
 
   </Accordion>
   <Accordion title="A request returns 501">

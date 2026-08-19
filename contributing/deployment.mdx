@@ -41,10 +41,13 @@ bundle) run, so a change that breaks either target fails the pull request.
 | `publish-staging.yml` | Push to `develop` | Builds `Dockerfile` and pushes `ghcr.io/opensource-together/web-app` tagged `develop` and with the commit SHA |
 | `publish-prod.yml` | A GitHub **release** is created | Pushes the same image tagged with semver (`1.2.3`, `1.2`, `1`), `latest`, and the commit SHA |
 
-Public environment variables are baked in at image build time as Docker build args:
-`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_URL`, and
-`NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET`, supplied from repository secrets. Because they're
-compiled into the client bundle, an image is tied to the environment it was built for.
+Public environment variables are baked in at image build time as Docker build args, supplied
+from repository secrets. Because they're compiled into the client bundle, an image is tied to
+the environment it was built for.
+
+Staging passes `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FRONTEND_URL` and
+`NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET`; production currently passes only
+`NEXT_PUBLIC_API_URL`.
 
 ### The Docker image
 
@@ -80,9 +83,7 @@ as static assets.
 
 <Warning>
   **No workflow runs `worker:deploy`.** CI builds the Workers bundle to catch breakage, but
-  deploying it is a manual operation, and `wrangler.toml` is not tracked in the public
-  repository, so Cloudflare deployment is limited to maintainers with the account
-  configuration.
+  deploying it is a manual step, run by a maintainer with access to the Cloudflare account.
 </Warning>
 
 ## The API

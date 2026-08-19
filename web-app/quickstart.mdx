@@ -61,7 +61,7 @@ opening a pull request.
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | API base URL used in the browser | Injected by `dev:mock` |
 | `INTERNAL_SERVER_API_URL` | API base URL used server-side (RSC, metadata, sitemap) | Injected by `dev:mock` |
-| `NEXT_PUBLIC_FRONTEND_URL` | The app's own origin; used by better-auth and mock CORS | Injected by `dev:mock` |
+| `NEXT_PUBLIC_FRONTEND_URL` | The app's own origin; used for metadata, `robots.txt` and mock CORS | Injected by `dev:mock` |
 | `NEXT_PUBLIC_API_MOCKING` | `enabled` renders the Mock mode toggle | Injected by `dev:mock` |
 | `MOCK_API_PORT` | Mock server port | Defaults to `4000` |
 | `NEXT_PUBLIC_METADATA_ASSETS_S3_BUCKET` | Base URL for OG/metadata image assets | Optional |
@@ -110,8 +110,8 @@ opensource-together/
 
   <Accordion title="Tailwind v4: there is no tailwind.config">
     Tailwind is configured **in CSS**, in `src/app/globals.css`: an `@theme inline` block maps
-    design tokens to utilities, and `:root` holds the raw `oklch()` values, including the
-    brand ramp `--ost-blue-one` … `--ost-blue-four`.
+    design tokens to utilities, and `:root` holds the raw values, including the brand ramp
+    `--ost-blue-one` … `--ost-blue-four`.
 
     To add or change a design token, edit `globals.css`. Don't create a `tailwind.config.js`.
     It would be ignored.

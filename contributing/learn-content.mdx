@@ -111,9 +111,12 @@ pnpm type-check
 pnpm build
 ```
 
-`pnpm build` matters here: chapters are prerendered at build time with
-`generateStaticParams`, and `dynamicParams` is disabled, so a chapter registered in
-`chapters.ts` without a matching file (or the reverse) is caught by the build, not at runtime.
+`pnpm build` matters here: chapters are prerendered at build time, so this is where a broken
+chapter shows up.
+
+One thing the build will **not** catch: it only reads `content/chapters.ts`, never the folders.
+An `.mdx` file you forgot to register is silently unreachable, and a registry entry with no file
+just renders empty. Check your chapter's URL yourself before opening the PR.
 
 <Info>
   For deployment, `pnpm worker:build` runs `scripts/copy-learn-html.js`, which copies the

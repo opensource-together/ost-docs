@@ -23,8 +23,8 @@ it: you.
 
 <CardGroup cols={3}>
   <Card title="Web App" icon="palette" href="/web-app/overview">
-    **Open source. Contribute here.** The Next.js web app: project discovery, profiles,
-    dashboard, and the Learn knowledge base.
+    **Open source. Contribute here.** Next.js, React and TypeScript: project discovery,
+    profiles, dashboard, and the Learn knowledge base.
   </Card>
   <Card title="API" icon="server" href="/api-reference/introduction">
     **Closed source.** A private service. You don't need it: its contract is fully documented
@@ -37,9 +37,10 @@ it: you.
 </CardGroup>
 
 <Info>
-  **The API is not open source today**, so you can't run it locally, and you don't have to.
-  The repository ships a complete local mock of the API with realistic seed data, so
-  every screen and flow works offline. See the [Mock API guide](/web-app/mock-api).
+  **So how do you build anything without the API?** The repository ships a local mock of it,
+  with realistic seed data. Every screen works offline. Signing in is the one exception:
+  instead of OAuth, a toggle switches you between signed in and signed out. See the
+  [Mock API guide](/web-app/mock-api).
 </Info>
 
 ## Start contributing
@@ -58,26 +59,6 @@ it: you.
     Contribute content instead of code, with no TypeScript required
   </Card>
 </CardGroup>
-
-## Technology
-
-<CardGroup cols={2}>
-  <Card title="Framework" icon="react">
-    Next.js (App Router, Turbopack) · React · TypeScript
-  </Card>
-  <Card title="Data & state" icon="database">
-    TanStack Query for server state · Zustand for client state · Zod + React Hook Form
-  </Card>
-  <Card title="UI" icon="palette">
-    Tailwind CSS (CSS-first config) · shadcn/ui on Radix primitives · Motion
-  </Card>
-  <Card title="Tooling & delivery" icon="cloud">
-    Biome for lint and formatting · pnpm · Cloudflare Workers via OpenNext · Docker
-  </Card>
-</CardGroup>
-
-Exact versions live on the [Web App overview](/web-app/overview), one page to update when
-something is upgraded.
 
 ## Join the community
 
